@@ -479,6 +479,7 @@
                 <th>구성품</th>
                 <th>수선각인</th>
                 <th>하자</th>
+                <th>사용감</th>
               </tr>
             </thead>
             <tbody id="batch-tbody"></tbody>
@@ -497,7 +498,8 @@
     "제조 연식 각인",
     "기재 구성품",
     "수선 / 각인 여부",
-    "하자 기재 여부"
+    "하자 기재 여부",
+    "사용감 참고"
   ];
 
   let history = [];
@@ -585,7 +587,8 @@
       '연식': 3, '각인': 3,
       '구성품': 4,
       '수선': 5,
-      '하자': 6
+      '하자': 6,
+      '사용감': 7
     };
 
     const result = CRITERIA.map(label => ({ label, found: false, details: [] }));
@@ -810,7 +813,7 @@
         <td class="care-no">${escHtml(row.careNo)}</td>
         <td class="brand-col">${escHtml(row.brand)}</td>
         <td class="title-col">${escHtml(row.title)}</td>
-        ${Array(7).fill('<td>—</td>').join('')}
+        ${Array(8).fill('<td>—</td>').join('')}
       `;
       document.getElementById('batch-tbody').appendChild(tr);
     });
@@ -883,7 +886,7 @@
 
   function exportCSV() {
     if (!batchResults.length) return;
-    const headers = ['케어번호','브랜드','카테고리','상품명','모델명/색상/소재','사이즈','새상품여부','제조연식각인','기재구성품','수선각인여부','하자기재여부','AI원문'];
+    const headers = ['케어번호','브랜드','카테고리','상품명','모델명/색상/소재','사이즈','새상품여부','제조연식각인','기재구성품','수선각인여부','하자기재여부','사용감참고','AI원문'];
     const rows = batchResults.map(r => {
       const cols = r.parsed.map(item => {
         const flag = item.found ? '🔵' : '❌';
