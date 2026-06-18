@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>명품 검수 어드민</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-primary: #FAF8F3;
+    --bg-secondary: #F2EEE5;
+    --bg-tertiary: #EAE4D8;
+    --text-primary: #2A2318;
+    --text-secondary: #7A6E5F;
+    --text-muted: #A89E8E;
+    --border-light: rgba(100,80,50,0.12);
+    --border-mid: rgba(100,80,50,0.22);
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --accent: #3D3225;
+    --accent-text: #F5F0E6;
+    --green-bg: #EAF0DC;
+    --green-text: #3B6010;
+    --red-bg: #FAE8E8;
+    --red-text: #9B2B2B;
+    --blue-bg: #E6EEF7;
+    --blue-text: #1A5490;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    min-height: 100vh;
+  }
+
+  .sidebar {
+    background: var(--bg-primary);
+    border-right: 0.5px solid var(--border-light);
+    padding: 1.5rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 1.25rem;
+    border-bottom: 0.5px solid var(--border-light);
+  }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: var(--radius-md);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .logo-icon i { color: var(--accent-text); font-size: 18px; }
+  .logo-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+  .logo-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-label { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+
+  input[type="text"], textarea {
+    width: 100%;
+    padding: 9px 11px;
+    font-size: 13px;
+    background: var(--bg-secondary);
+    border: 0.5px solid var(--border-light);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    outline: none;
+    font-family: inherit;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  input[type="text"]:focus, textarea:focus {
+    border-color: var(--border-mid);
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+  }
+  textarea { resize: vertical; min-height: 180px; line-height: 1.6; }
+
+  .btn-run {
+    width: 100%;
+    padding: 11px;
+    font-size: 13px; font-weight: 600;
+    background: var(--accent);
+    color: var(--accent-text);
+    border: none; border-radius: var(--radius-md);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    transition: opacity .15s, transform .1s;
+  }
+  .btn-run:hover { opacity: .88; }
+  .btn-run:active { transform: scale(0.98); }
+  .btn-run:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+  .btn-clear {
+    width: 100%;
+    padding: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    background: transparent;
+    border: 0.5px solid var(--border-light);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-clear:hover { background: var(--bg-secondary); }
+
+  .section-label {
+    font-size: 10px; font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: .07em;
+    text-transform: uppercase;
+  }
+
+  .history-list { display: flex; flex-direction: column; gap: 3px; }
+  .history-item {
+    padding: 8px 10px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    border: 0.5px solid transparent;
+    transition: all .12s;
+  }
+  .history-item:hover {
+    background: var(--bg-secondary);
+    border-color: var(--border-light);
+  }
+  .history-item-title {
+    font-size: 12px; font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .history-item-time { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+  .history-empty { font-size: 12px; color: var(--text-muted); padding: 4px 0; }
+
+  .main {
+    padding: 0;
+    display: flex; flex-direction: column; gap: 0;
+    max-width: 900px;
+    overflow: hidden;
+  }
+  .tab-panel.active {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .page-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+  }
+  .page-title { font-size: 20px; font-weight: 600; color: var(--text-primary); }
+  .page-sub { font-size: 13px; color: var(--text-secondary); margin-top: 3px; }
+
+  .status-badge {
+    font-size: 11px; font-weight: 500;
+    padding: 5px 12px; border-radius: 20px;
+    white-space: nowrap; margin-top: 4px;
+  }
+  .s-idle    { background: var(--bg-secondary); color: var(--text-secondary); }
+  .s-running { background: var(--blue-bg);      color: var(--blue-text); }
+  .s-done    { background: var(--green-bg);      color: var(--green-text); }
+  .s-error   { background: var(--red-bg);        color: var(--red-text); }
+
+  .result-card {
+    background: var(--bg-primary);
+    border: 0.5px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    min-height: 420px;
+  }
+
+  .result-empty {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    height: 100%; min-height: 380px;
+    gap: 10px; color: var(--text-muted);
+    text-align: center;
+  }
+  .result-empty i { font-size: 36px; opacity: .35; }
+  .result-empty p { font-size: 13px; line-height: 1.7; }
+
+  .result-banner {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    margin-bottom: 6px;
+    font-size: 13px; font-weight: 600; color: var(--text-primary);
+  }
+  .result-banner i { font-size: 16px; }
+
+  .result-list { list-style: none; }
+
+  .result-item {
+    padding: 10px 0 10px 4px;
+    border-bottom: 0.5px solid var(--border-light);
+  }
+  .result-item:last-child { border-bottom: none; }
+
+  .result-item-header {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .result-dot-wrap {
+    width: 18px; height: 18px;
+    border: 1.5px solid var(--border-mid);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .result-dot-inner {
+    width: 8px; height: 8px; border-radius: 50%;
+  }
+  .dot-pass .result-dot-inner { background: #2563eb; }
+  .dot-fail .result-dot-inner { background: transparent; }
+
+  .result-name {
+    font-size: 14px; font-weight: 600; color: var(--text-primary);
+  }
+  .result-status-icon {
+    font-size: 17px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .result-bullets {
+    margin-top: 6px;
+    padding-left: 30px;
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .result-bullet {
+    display: flex; align-items: flex-start; gap: 7px;
+    font-size: 13px; color: var(--text-secondary); line-height: 1.6;
+  }
+  .result-bullet::before {
+    content: '▪';
+    color: var(--text-muted);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .tab-bar {
+    display: flex; gap: 4px;
+    padding: 1rem 1.5rem 0;
+    border-bottom: 0.5px solid var(--border-light);
+    background: var(--bg-primary);
+  }
+  .tab-btn {
+    padding: 8px 16px; font-size: 13px; font-weight: 500;
+    background: transparent; border: none; cursor: pointer;
+    color: var(--text-secondary); border-bottom: 2px solid transparent;
+    margin-bottom: -0.5px; transition: color .15s;
+  }
+  .tab-btn:hover { color: var(--text-primary); }
+  .tab-btn.active { color: var(--text-primary); border-bottom-color: var(--accent); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: flex; flex-direction: column; gap: 1.25rem; padding: 1.5rem; }
+
+  .upload-zone {
+    border: 1.5px dashed var(--border-mid);
+    border-radius: var(--radius-lg);
+    padding: 2rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+  }
+  .upload-zone:hover { border-color: var(--accent); background: var(--bg-secondary); }
+  .upload-zone i { font-size: 32px; color: var(--text-muted); display: block; margin-bottom: 8px; }
+  .upload-zone p { font-size: 13px; color: var(--text-secondary); }
+  .upload-zone span { font-size: 11px; color: var(--text-muted); }
+
+  .batch-progress-bar {
+    height: 4px; background: var(--bg-secondary); border-radius: 2px; overflow: hidden;
+  }
+  .batch-progress-fill {
+    height: 100%; background: var(--accent); border-radius: 2px;
+    transition: width .3s ease;
+  }
+
+  .batch-table-wrap { overflow-x: auto; border: 0.5px solid var(--border-light); border-radius: var(--radius-lg); }
+  .batch-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 700px; }
+  .batch-table th {
+    background: var(--bg-secondary); padding: 10px 12px; text-align: left;
+    font-weight: 500; font-size: 11px; color: var(--text-secondary);
+    border-bottom: 0.5px solid var(--border-light); white-space: nowrap;
+  }
+  .batch-table td {
+    padding: 10px 12px; border-bottom: 0.5px solid var(--border-light);
+    vertical-align: top; color: var(--text-primary);
+  }
+  .batch-table tr:last-child td { border-bottom: none; }
+  .batch-table tr:hover td { background: var(--bg-secondary); }
+  .batch-table .care-no { font-weight: 600; white-space: nowrap; }
+  .batch-table .brand-col { color: var(--text-secondary); white-space: nowrap; }
+  .batch-table .title-col { max-width: 180px; }
+  .batch-table .result-col { min-width: 280px; }
+  .icon-dot { font-size: 14px; }
+  .detail-text { font-size: 11px; color: var(--text-secondary); margin-top: 2px; line-height: 1.5; }
+  .row-pending td { opacity: .4; }
+  .row-running td { background: var(--blue-bg) !important; }
+
+  .batch-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .batch-stat { font-size: 12px; color: var(--text-secondary); margin-left: auto; }
+
+  .spinner {
+    display: inline-block;
+    width: 15px; height: 15px;
+    border: 2px solid rgba(255,255,255,.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .65s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 768px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { position: static; height: auto; }
+    .main { padding: 1.25rem 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon"><i class="ti ti-shield-check"></i></div>
+      <div>
+        <div class="logo-name">명품 검수 어드민</div>
+        <div class="logo-sub">AI 자동 분석 시스템</div>
+      </div>
+    </div>
+
+    <div id="sidebar-single">
+      <div class="form-group">
+        <label class="form-label">상품명 + 본문 내용</label>
+        <textarea id="inp-content" placeholder="상품명과 본문 내용을 함께 붙여넣으세요&#10;예) 샤넬 클래식 플랩백 M 블랙&#10;새상품 선물 받은 미사용 제품입니다..." style="min-height:220px"></textarea>
+      </div>
+      <button class="btn-run" id="btn-run" onclick="runAnalysis()">
+        <i class="ti ti-sparkles"></i> AI 검수 시작
+      </button>
+      <button class="btn-clear" onclick="clearAll()">초기화</button>
+    </div>
+
+    <div id="sidebar-batch" style="display:none">
+      <div class="form-group">
+        <label class="form-label">처리 건수</label>
+        <select id="batch-count" style="width:100%;padding:8px 10px;font-size:13px;border:0.5px solid var(--border-light);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary)">
+          <option value="10">10건</option>
+          <option value="20">20건</option>
+          <option value="50">50건</option>
+          <option value="100">100건</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">시작 행 (0부터)</label>
+        <input type="number" id="batch-offset" value="0" min="0" style="width:100%" />
+      </div>
+      <button class="btn-run" id="btn-batch" onclick="runBatch()">
+        <i class="ti ti-table-import"></i> 일괄 검수 시작
+      </button>
+      <button class="btn-clear" id="btn-stop" onclick="stopBatch()" style="display:none;background:var(--red-bg);color:var(--red-text);border-color:var(--red-text)">
+        <i class="ti ti-player-stop" style="font-size:13px;vertical-align:-2px;margin-right:4px"></i> 중단
+      </button>
+      <button class="btn-clear" id="btn-export" onclick="exportCSV()" style="display:none">
+        <i class="ti ti-download" style="font-size:13px;vertical-align:-2px;margin-right:4px"></i> 결과 CSV 저장
+      </button>
+    </div>
+
+    <div>
+      <div class="section-label" style="margin-bottom:.6rem">최근 검수 내역</div>
+      <div class="history-list" id="history-list">
+        <div class="history-empty">아직 검수 내역이 없습니다</div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main" style="padding:0;gap:0">
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tab-single-btn" onclick="switchTab('single')">
+        <i class="ti ti-file-text" style="font-size:14px;vertical-align:-2px;margin-right:5px"></i>단건 검수
+      </button>
+      <button class="tab-btn" id="tab-batch-btn" onclick="switchTab('batch')">
+        <i class="ti ti-table" style="font-size:14px;vertical-align:-2px;margin-right:5px"></i>CSV 일괄처리
+      </button>
+    </div>
+
+    <div class="tab-panel active" id="tab-single">
+      <div class="page-header">
+        <div>
+          <div class="page-title">검수 결과</div>
+          <div class="page-sub">항목별 자동 추출 및 상태 표시</div>
+        </div>
+        <span class="status-badge s-idle" id="status-badge">대기 중</span>
+      </div>
+      <div class="result-card" id="result-card">
+        <div class="result-empty" id="result-empty">
+          <i class="ti ti-file-search"></i>
+          <p>상품명과 본문을 입력하고<br>AI 검수 시작 버튼을 눌러주세요</p>
+        </div>
+        <div id="result-content" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-batch">
+      <div class="page-header">
+        <div>
+          <div class="page-title">CSV 일괄처리</div>
+          <div class="page-sub">케어번호 · 상품명 · 본문내용 자동 추출</div>
+        </div>
+        <span class="status-badge s-idle" id="batch-status-badge">대기 중</span>
+      </div>
+
+      <div id="upload-area">
+        <div class="upload-zone" onclick="document.getElementById('csv-input').click()" id="drop-zone">
+          <i class="ti ti-file-spreadsheet"></i>
+          <p>CSV 파일을 클릭하거나 드래그하여 업로드</p>
+          <span>케어번호, 상품명, 본문내용 포함된 파일</span>
+        </div>
+        <input type="file" id="csv-input" accept=".csv" style="display:none" onchange="loadCSV(this)">
+        <div id="csv-info" style="display:none;font-size:12px;color:var(--text-secondary);padding:8px 4px"></div>
+      </div>
+
+      <div id="batch-progress-wrap" style="display:none">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-secondary);margin-bottom:6px">
+          <span id="batch-progress-label">준비 중...</span>
+          <span id="batch-progress-pct">0%</span>
+        </div>
+        <div class="batch-progress-bar"><div class="batch-progress-fill" id="batch-progress-fill" style="width:0%"></div></div>
+      </div>
+
+      <div id="batch-result-area" style="display:none">
+        <div class="batch-table-wrap">
+          <table class="batch-table">
+            <thead>
+              <tr>
+                <th style="width:90px">케어번호</th>
+                <th style="width:80px">브랜드</th>
+                <th>상품명</th>
+                <th>모델/색상/소재</th>
+                <th>사이즈</th>
+                <th>새상품</th>
+                <th>연식각인</th>
+                <th>구성품</th>
+                <th>수선각인</th>
+                <th>하자</th>
+              </tr>
+            </thead>
+            <tbody id="batch-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  const CRITERIA = [
+    "모델명 / 색상 / 소재",
+    "사이즈",
+    "새상품 여부",
+    "제조 연식 각인",
+    "기재 구성품",
+    "수선 / 각인 여부",
+    "하자 기재 여부"
+  ];
+
+  let history = [];
+  let isRunning = false;
+
+  function setStatus(cls, text) {
+    const b = document.getElementById('status-badge');
+    b.className = 'status-badge ' + cls;
+    b.textContent = text;
+  }
+
+  function setMetrics() {}
+
+  function clearAll() {
+    document.getElementById('inp-content').value = '';
+    document.getElementById('result-empty').style.display  = 'flex';
+    document.getElementById('result-empty').innerHTML =
+      '<i class="ti ti-file-search"></i><p>상품명과 본문을 입력하고<br>AI 검수 시작 버튼을 눌러주세요</p>';
+    document.getElementById('result-content').style.display = 'none';
+    setStatus('s-idle', '대기 중');
+    setMetrics(null, null, null);
+  }
+
+  function renderHistory() {
+    const el = document.getElementById('history-list');
+    if (!history.length) {
+      el.innerHTML = '<div class="history-empty">아직 검수 내역이 없습니다</div>';
+      return;
+    }
+    el.innerHTML = [...history].reverse().slice(0, 6).map((h, i) => `
+      <div class="history-item" onclick="loadHistory(${history.length - 1 - i})">
+        <div class="history-item-title">${escHtml(h.title)}</div>
+        <div class="history-item-time">${h.time} · 확인 ${h.pass}/${h.total}</div>
+      </div>
+    `).join('');
+  }
+
+  function loadHistory(idx) {
+    const h = history[idx];
+    document.getElementById('inp-content').value = h.content;
+    renderParsed(h.parsed, h.raw);
+    setStatus('s-done', '검수 완료');
+  }
+
+  function renderParsed(items, raw) {
+    const pass = items.filter(i => i.found).length;
+    const fail = items.length - pass;
+    setMetrics(items.length, pass, fail);
+
+    const itemsHtml = items.map(item => {
+      const bullets = (item.details && item.details.length)
+        ? item.details.map(d => `<div class="result-bullet">${escHtml(d)}</div>`).join('')
+        : item.detail
+          ? `<div class="result-bullet">${escHtml(item.detail)}</div>`
+          : '';
+
+      return `
+        <li class="result-item">
+          <div class="result-item-header">
+            <span class="result-name">${escHtml(item.label)}</span>
+            <span class="result-status-icon">${item.found ? '🔵' : '❌'}</span>
+          </div>
+          ${bullets ? `<div class="result-bullets">${bullets}</div>` : ''}
+        </li>
+      `;
+    }).join('');
+
+    document.getElementById('result-empty').style.display = 'none';
+    const rc = document.getElementById('result-content');
+    rc.style.display = 'block';
+    rc.innerHTML = `
+      <div class="result-banner">
+        <i class="ti ti-robot"></i>
+        AI 추출 항목화 결과
+      </div>
+      <ul class="result-list">${itemsHtml}</ul>
+    `;
+  }
+
+  function parseResponse(text) {
+    const keyMap = {
+      '모델명': 0, '색상': 0, '소재': 0,
+      '사이즈': 1,
+      '새상품': 2,
+      '연식': 3, '각인': 3,
+      '구성품': 4,
+      '수선': 5,
+      '하자': 6
+    };
+
+    const result = CRITERIA.map(label => ({ label, found: false, details: [] }));
+    const seen = new Set();
+    const lines = text.split('\n');
+    let lastIdx = -1;
+
+    for (const line of lines) {
+      const t = line.trim();
+      if (!t) continue;
+
+      const hasBlue = t.includes('🔵');
+      const hasRed  = t.includes('❌');
+
+      if (hasBlue || hasRed) {
+        for (const [key, idx] of Object.entries(keyMap)) {
+          if (t.includes(key) && !seen.has(idx)) {
+            seen.add(idx);
+            result[idx].found = hasBlue;
+            lastIdx = idx;
+            break;
+          }
+        }
+      } else if (lastIdx >= 0) {
+        const stripped = t.replace(/^[\s\u2003\u00a0]+/, '');
+        if (stripped.startsWith('▪') || stripped.startsWith('•')) {
+          const detail = stripped.replace(/^[▪•]\s*/, '').trim();
+          if (detail) result[lastIdx].details.push(detail);
+        }
+      }
+    }
+
+    return result.map(r => ({ ...r, detail: r.details.join(' / ') }));
+  }
+
+  /* ── 서버리스 함수 호출 (API 키는 서버에만 존재, 클라이언트에 노출 안 됨) ── */
+  async function callAPI(title, content) {
+    const res = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, content })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.error?.message || `HTTP ${res.status}`);
+    }
+    return data.raw || '';
+  }
+
+  async function runAnalysis() {
+    if (isRunning) return;
+
+    const content = document.getElementById('inp-content').value.trim();
+
+    if (!content) {
+      setStatus('s-error', '입력 필요');
+      document.getElementById('result-empty').style.display = 'flex';
+      document.getElementById('result-empty').innerHTML =
+        '<i class="ti ti-alert-circle" style="color:var(--red-text)"></i><p>상품명과 본문을 입력해주세요.</p>';
+      return;
+    }
+
+    isRunning = true;
+    const btn = document.getElementById('btn-run');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> 분석 중...';
+    setStatus('s-running', 'AI 분석 중');
+
+    document.getElementById('result-content').style.display = 'none';
+    document.getElementById('result-empty').style.display = 'flex';
+    document.getElementById('result-empty').innerHTML =
+      '<i class="ti ti-loader-2" style="opacity:.4;font-size:32px;animation:spin .8s linear infinite"></i>' +
+      '<p>AI가 항목을 분석하고 있습니다...</p>';
+    setMetrics(null, null, null);
+
+    try {
+      const raw = await callAPI('', content);
+      if (!raw) throw new Error('AI 응답이 비어있습니다');
+
+      const parsed = parseResponse(raw);
+      const pass   = parsed.filter(i => i.found).length;
+
+      const now  = new Date();
+      const time = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+      const previewTitle = content.slice(0, 30) + (content.length > 30 ? '…' : '');
+      history.push({ title: previewTitle, content, parsed, raw, time, pass, total: parsed.length });
+      renderHistory();
+
+      renderParsed(parsed, raw);
+      setStatus('s-done', '검수 완료');
+
+    } catch (e) {
+      setStatus('s-error', '오류 발생');
+      document.getElementById('result-empty').style.display = 'flex';
+      document.getElementById('result-empty').innerHTML =
+        `<i class="ti ti-alert-triangle" style="color:var(--red-text);font-size:28px"></i>` +
+        `<p style="color:var(--red-text);font-size:13px">${escHtml(e.message)}</p>`;
+    } finally {
+      isRunning = false;
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-sparkles"></i> AI 검수 시작';
+    }
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function switchTab(tab) {
+    document.getElementById('tab-single').classList.toggle('active', tab === 'single');
+    document.getElementById('tab-batch').classList.toggle('active', tab === 'batch');
+    document.getElementById('tab-single-btn').classList.toggle('active', tab === 'single');
+    document.getElementById('tab-batch-btn').classList.toggle('active', tab === 'batch');
+    document.getElementById('sidebar-single').style.display = tab === 'single' ? '' : 'none';
+    document.getElementById('sidebar-batch').style.display  = tab === 'batch'  ? '' : 'none';
+  }
+
+  let csvRows = [];
+  let batchRunning = false;
+  let batchStop = false;
+  let batchResults = [];
+
+  function parseCSV(text) {
+    const lines = text.split('\n');
+    if (!lines.length) return [];
+    const header = lines[0];
+    const delim = header.includes('\t') ? '\t' : ',';
+    const headers = splitCSVLine(header, delim);
+    const careIdx  = headers.findIndex(h => h.replace(/"/g,'').trim() === '케어번호');
+    const brandIdx = headers.findIndex(h => h.replace(/"/g,'').trim() === '브랜드');
+    const catIdx   = headers.findIndex(h => h.replace(/"/g,'').trim() === '카테고리');
+    const titleIdx = headers.findIndex(h => h.replace(/"/g,'').trim() === '상품명');
+    const bodyIdx  = headers.findIndex(h => h.replace(/"/g,'').trim() === '본문내용');
+
+    const rows = [];
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      const cols = splitCSVLine(line, delim);
+      const body = cols[bodyIdx] || '';
+      if (!body || body.length < 20) continue;
+      rows.push({
+        careNo : cols[careIdx]  || '',
+        brand  : cols[brandIdx] || '',
+        category: cols[catIdx]  || '',
+        title  : cols[titleIdx] || '',
+        body   : body
+      });
+    }
+    return rows;
+  }
+
+  function splitCSVLine(line, delim) {
+    const result = [];
+    let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') { inQ = !inQ; }
+      else if (c === delim && !inQ) { result.push(cur.trim()); cur = ''; }
+      else { cur += c; }
+    }
+    result.push(cur.trim());
+    return result;
+  }
+
+  function loadCSV(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      csvRows = parseCSV(e.target.result);
+      const info = document.getElementById('csv-info');
+      info.style.display = 'block';
+      info.innerHTML = `<i class="ti ti-check" style="color:var(--green-text);font-size:14px;vertical-align:-2px;margin-right:4px"></i>` +
+        `<strong>${file.name}</strong> — 본문 있는 행 <strong>${csvRows.length.toLocaleString()}건</strong> 로드 완료`;
+      document.getElementById('drop-zone').style.borderColor = 'var(--green-text)';
+    };
+    reader.readAsText(file, 'utf-8');
+  }
+
+  const dropZone = document.getElementById('drop-zone');
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.borderColor = 'var(--accent)'; });
+  dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = ''; });
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.style.borderColor = '';
+    const file = e.dataTransfer.files[0];
+    if (file && file.name.endsWith('.csv')) {
+      const fakeInput = { files: [file] };
+      loadCSV(fakeInput);
+    }
+  });
+
+  async function runBatch() {
+    if (!csvRows.length) { alert('먼저 CSV 파일을 업로드해주세요.'); return; }
+
+    const count  = parseInt(document.getElementById('batch-count').value);
+    const offset = parseInt(document.getElementById('batch-offset').value) || 0;
+    const targets = csvRows.slice(offset, offset + count);
+    if (!targets.length) { alert('해당 범위에 데이터가 없습니다.'); return; }
+
+    batchRunning = true;
+    batchStop = false;
+    batchResults = [];
+
+    document.getElementById('btn-batch').disabled = true;
+    document.getElementById('btn-stop').style.display = '';
+    document.getElementById('btn-export').style.display = 'none';
+    document.getElementById('batch-progress-wrap').style.display = '';
+    document.getElementById('batch-result-area').style.display = '';
+    document.getElementById('batch-tbody').innerHTML = '';
+
+    targets.forEach((row, i) => {
+      const tr = document.createElement('tr');
+      tr.id = `brow-${i}`;
+      tr.className = 'row-pending';
+      tr.innerHTML = `
+        <td class="care-no">${escHtml(row.careNo)}</td>
+        <td class="brand-col">${escHtml(row.brand)}</td>
+        <td class="title-col">${escHtml(row.title)}</td>
+        ${Array(7).fill('<td>—</td>').join('')}
+      `;
+      document.getElementById('batch-tbody').appendChild(tr);
+    });
+
+    setBatchStatus('s-running', `0 / ${targets.length} 처리 중`);
+
+    for (let i = 0; i < targets.length; i++) {
+      if (batchStop) break;
+
+      const row = targets[i];
+      const tr  = document.getElementById(`brow-${i}`);
+      tr.className = 'row-running';
+
+      const pct = Math.round(i / targets.length * 100);
+      document.getElementById('batch-progress-fill').style.width = pct + '%';
+      document.getElementById('batch-progress-pct').textContent = pct + '%';
+      document.getElementById('batch-progress-label').textContent = `${i + 1} / ${targets.length} — ${row.brand} ${row.title.slice(0,20)}`;
+      setBatchStatus('s-running', `${i + 1} / ${targets.length} 처리 중`);
+
+      let parsed = null;
+      try {
+        const raw = await callAPI(row.title, row.body);
+        parsed = parseResponse(raw);
+        batchResults.push({ ...row, parsed, raw, ok: true });
+      } catch (e) {
+        parsed = CRITERIA.map(label => ({ label, found: false, details: [] }));
+        batchResults.push({ ...row, parsed, raw: '오류: ' + e.message, ok: false });
+      }
+
+      tr.className = '';
+      const cells = parsed.map(item => {
+        const icon = item.found ? '🔵' : '❌';
+        const detail = (item.details || []).join(' / ');
+        return `<td><span class="icon-dot">${icon}</span>${detail ? `<div class="detail-text">${escHtml(detail.slice(0,60))}${detail.length>60?'…':''}</div>` : ''}</td>`;
+      });
+      tr.innerHTML = `
+        <td class="care-no">${escHtml(row.careNo)}</td>
+        <td class="brand-col">${escHtml(row.brand)}</td>
+        <td class="title-col">${escHtml(row.title)}</td>
+        ${cells.join('')}
+      `;
+      tr.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      if (i < targets.length - 1) await sleep(300);
+    }
+
+    const done = batchStop ? '중단됨' : '완료';
+    document.getElementById('batch-progress-fill').style.width = '100%';
+    document.getElementById('batch-progress-pct').textContent = '100%';
+    setBatchStatus(batchStop ? 's-error' : 's-done', `${done} (${batchResults.length}건)`);
+    document.getElementById('btn-batch').disabled = false;
+    document.getElementById('btn-stop').style.display = 'none';
+    document.getElementById('btn-export').style.display = '';
+    batchRunning = false;
+  }
+
+  function stopBatch() { batchStop = true; }
+
+  function setBatchStatus(cls, text) {
+    const b = document.getElementById('batch-status-badge');
+    b.className = 'status-badge ' + cls;
+    b.textContent = text;
+  }
+
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') runAnalysis();
+  });
+
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  function exportCSV() {
+    if (!batchResults.length) return;
+    const headers = ['케어번호','브랜드','카테고리','상품명','모델명/색상/소재','사이즈','새상품여부','제조연식각인','기재구성품','수선각인여부','하자기재여부','AI원문'];
+    const rows = batchResults.map(r => {
+      const cols = r.parsed.map(item => {
+        const flag = item.found ? '🔵' : '❌';
+        const detail = (item.details || []).join(' | ');
+        return `"${flag} ${detail.replace(/"/g,'""')}"`;
+      });
+      return [
+        `"${r.careNo}"`,`"${r.brand}"`,`"${r.category}"`,
+        `"${r.title.replace(/"/g,'""')}"`,
+        ...cols,
+        `"${(r.raw||'').replace(/"/g,'""').replace(/\n/g,' ')}"`
+      ].join(',');
+    });
+    const csv = '\uFEFF' + headers.join(',') + '\n' + rows.join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `검수결과_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  }
+</script>
+</body>
+</html>
