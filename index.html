@@ -224,7 +224,7 @@
   .judge-empty i { font-size: 36px; opacity: .35; }
   .judge-empty p { font-size: 13px; line-height: 1.7; }
   .judge-list { display: flex; flex-direction: column; gap: 8px; }
-  .judge-item { border: 0.5px solid var(--border-light); border-radius: var(--radius-md); overflow: hidden; }
+  .judge-item { border: 0.5px solid var(--border-light); border-radius: var(--radius-md); }
   .judge-header {
     display: flex; align-items: center; justify-content: space-between;
     padding: 8px 12px; background: var(--bg-secondary);
@@ -419,10 +419,13 @@
   .batch-tmpl-btn:hover { background: var(--bg-tertiary); }
   .batch-tmpl-btn.copied { color: var(--green-text); border-color: var(--green-text); }
   .tmpl-dd {
-    position: absolute; left: 0; top: calc(100% + 4px); z-index: 99;
+    position: absolute; left: 0; top: calc(100% + 4px); z-index: 999;
     background: var(--bg-primary); border: 0.5px solid var(--border-mid);
     border-radius: var(--radius-md); box-shadow: 0 4px 16px rgba(0,0,0,.1);
     min-width: 220px; overflow: hidden;
+  }
+  .judge-item .tmpl-dd {
+    top: auto; bottom: calc(100% + 4px);
   }
   .tmpl-dd-item {
     padding: 8px 12px; font-size: 12px; color: var(--text-primary);
@@ -601,6 +604,7 @@
                 <th>수선각인</th>
                 <th>하자</th>
                 <th>사용감 참고</th>
+                <th>구성품 연식</th>
               </tr>
             </thead>
             <tbody id="batch-tbody"></tbody>
@@ -620,7 +624,8 @@
     "기재 구성품",
     "수선 / 각인 여부",
     "하자 기재 여부",
-    "사용감 참고"
+    "사용감 참고",
+    "구성품 연식"
   ];
 
   let history = [];
@@ -736,6 +741,10 @@
       { label: "기능 결함", value: "보류 > 기능 결함 > 해당 템플릿 체크" },
       { label: "부속품 누락", value: "보류 > 제품 부속품 누락 > 해당 템플릿 체크" },
       { label: "빈티지 개체 확인 불가", value: "보류 > 도착한 구성품 확인 필요 > 현재 입고된 부속품 외 추가적인 부속품 확인이 불가합니다." }
+    ],
+    "구성품 연식": [
+      { label: "구성품 연식 불일치", value: "보류 > 본문 상품 정보와 불일치 > 상품 설명에 기재된 구매 시기 : [텍스트], 실제 도착한 상품의 구성품에서 확인된 구매 시기 : [텍스트]" },
+      { label: "구성품 연식 확인 필요", value: "보류 > 기타 > 입고된 상품의 구성품 연식을 확인해주세요." }
     ]
   };
 
@@ -790,8 +799,9 @@
       '모델명': 0, '색상': 0, '소재': 0,
       '사이즈': 1,
       '새상품': 2,
-      '연식': 3,
-      '구성품': 4,
+      '구성품 연식': 8,
+      '제조 연식': 3, '연식 각인': 3,
+      '기재 구성품': 4, '구성품': 4,
       '수선': 5,
       '하자': 6,
       '사용감': 7
@@ -1232,9 +1242,12 @@
     return CLOTHING_CATEGORIES.some(c => (category || '').includes(c));
   }
 
-  // 숫자 사이즈 추출 (42, 250, 105 등)
+  // 사이즈 추출 (숫자: 42, 250, 105 등 / 영문: XS, S, M, L, XL, XXL, XXXL, FREE, ONE SIZE 등)
   function extractSizeNums(text) {
-    return (text || '').match(/\b\d{2,3}(\.\d)?\b/g) || [];
+    const t = (text || '').toUpperCase();
+    const nums = t.match(/\b\d{2,3}(\.\d)?\b/g) || [];
+    const letters = t.match(/\b(XXXL|XXL|XL|XS|S|M|L|FREE|ONE\s*SIZE|ONESIZE)\b/g) || [];
+    return [...nums, ...letters.map(s => s.replace(/\s/g, ''))];
   }
 
   function checkAttrMismatch(row, parsed) {
@@ -1344,7 +1357,7 @@
     const headers = [
       '케어번호','브랜드','카테고리','상품명','상품사이즈(현재)','상품상태(현재)',
       '검수결과','상세사유','선판정신호',
-      '모델명/색상/소재','사이즈','새상품여부','제조연식각인','기재구성품','수선각인여부','하자기재여부','사용감참고',
+      '모델명/색상/소재','사이즈','새상품여부','제조연식각인','기재구성품','수선각인여부','하자기재여부','사용감참고','구성품연식',
       'AI원문'
     ];
     const rows = batchResults.map(r => {
