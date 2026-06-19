@@ -1016,8 +1016,14 @@
       const newItem = parsed[IDX_NEW];
       // 새상품 항목 발췌 내용에 착용/사용 행위 키워드가 있으면 신호
       const usageKeywords = ['착용', '사용', '신어', '써봤', '입어', '한 번', '몇 번', '잠깐'];
+      const negativePrefix = ['미', '안 ', '않', '없', '한번도'];
       const newText = (newItem.details || []).join(' ');
-      const hasUsageInNew = usageKeywords.some(kw => newText.includes(kw));
+      const hasUsageInNew = usageKeywords.some(kw => {
+        const idx = newText.indexOf(kw);
+        if (idx === -1) return false;
+        const before = newText.slice(Math.max(0, idx - 2), idx);
+        return !negativePrefix.some(neg => before.endsWith(neg));
+      });
       if (hasUsageInNew) {
         flags[IDX_NEW] = `속성값은 새상품인데 본문에 사용 행위 표현이 있어요`;
       } else if (parsed[IDX_FLAW].found) {
