@@ -1476,10 +1476,38 @@
     const negativePatterns = ['안 신고', '안신고', '못 신고', '못신고', '거의 안', '별로 안', '안 쓰고', '안쓰고', '안 입고', '안입고'];
     const hasNewKeyword = newKeywords.some(kw => fullRaw.includes(kw));
     const hasNegative   = negativePatterns.some(p => fullRaw.includes(p));
+    // 등급표·안내문 패턴 감지 — 판매자가 직접 기재한 게 아닌 상태 설명문
+    const gradeTablePattern = /[NSABC]\s*[:：]\s*(새상품|사용감|외관|하자|스크래치)/;
+    const hasGradeTable = gradeTablePattern.test(fullRaw);
     const newInAttr     = statusAttr.includes('새상품') || statusAttr.includes('미사용') || statusAttr.includes('미착용');
     const newInBody     = parsed[IDX_NEW].found || newKeywords.some(kw => rawBody.includes(kw));
 
-    if ((newInAttr || newInBody) && hasNewKeyword && !hasNegative) {
+    if ((newInAttr || newInBody) && hasNewKeyword && !hasNegative && !hasGradeTable) {
+      // AI가 발췌 못 했으면 본문에서 새상품 키워드 포함 문장 직접 추출 — 전부 발췌
+      if (!parsed[IDX_NEW].found) {
+        const _newSentences = [];
+        newKeywords.forEach(kw => {
+          let _searchFrom = 0;
+          while (true) {
+            const _ki = fullRaw.indexOf(kw, _searchFrom);
+            if (_ki < 0) break;
+            const _b = fullRaw.slice(0, _ki);
+            const _a = fullRaw.slice(_ki + kw.length);
+            const _bm = _b.match(/[,(]+([^,()]+)$/);
+            const _bp = _bm ? _bm[1].trim() : _b.slice(-15).trim();
+            const _am = _a.match(/^([^,().!?(]+)/);
+            const _ap = _am ? _am[1].trim() : '';
+            const _s = ((_bp ? _bp + ' ' : '') + kw + (_ap ? ' ' + _ap : '')).trim();
+            if (_s) _newSentences.push(_s);
+            _searchFrom = _ki + kw.length;
+          }
+        });
+        if (_newSentences.length > 0) {
+          parsed[IDX_NEW].found = true;
+          parsed[IDX_NEW].details = _newSentences;
+          parsed[IDX_NEW].detail  = _newSentences.join(' / ');
+        }
+      }
       flags[IDX_NEW] = {
         auto: false,
         result: '',
