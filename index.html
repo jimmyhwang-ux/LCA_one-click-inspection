@@ -1443,12 +1443,13 @@
 
     /* ── 2. 기재 구성품: 모호한 표현 — AI 발췌 여부 무관, 본문 원문 직접 검색 ── */
     const vagueKeywords = ['풀구성', '풀박스', '구매 당시 그대로', '구매당시그대로', '풀세트', '풀셋', '전부 있', '전부있', '다 있', '다있', '구성 동일', '구성이 동일', '동일한 구성', '구성과 동일', '구성그대로', '구성 그대로'];
-    if (vagueKeywords.some(kw => textFor(IDX_COMP).includes(kw))) {
+    const matchedVague = vagueKeywords.find(kw => textFor(IDX_COMP).includes(kw));
+    if (matchedVague) {
       flags[IDX_COMP] = {
         auto: true,
         result: '보류',
         reason: '구성품 확인 필요 > 구성품이 상품 설명과 같은지 확인 후 구매를 결정해 주세요.',
-        warn: '구성품 모호 표현 기재 (풀구성/풀박스 등)'
+        warn: `구성품 모호 표현 기재 ("${matchedVague}")`
       };
     }
 
@@ -1474,15 +1475,21 @@
     const sizeAttr     = (row.sizeAttr || '').trim();
     const sizeBodyText = parsedText(IDX_SIZE) + ' ' + rawBody + ' ' + rawTitle;
     let sizeFlag = false;
+    let sizeWarn = '';
 
     // 4-① 속성값 vs 본문 (기타 계열 제외)
     if (sizeAttr && !sizeAttr.startsWith('기타')) {
       const attrNums = extractSizeNums(sizeAttr);
       const bodyNums = extractSizeNums(sizeBodyText);
       if (attrNums.length > 0 && bodyNums.length > 0) {
-        if (attrNums.some(n => !bodyNums.includes(n))) sizeFlag = true;
+        const mismatched = attrNums.filter(n => !bodyNums.includes(n));
+        if (mismatched.length > 0) {
+          sizeFlag = true;
+          sizeWarn = `사이즈 불일치 — 속성값 "${mismatched.join('/')}" vs 본문 상이`;
+        }
       } else if (attrNums.length > 0 && extractSizeNums(rawBody + ' ' + rawTitle).length === 0) {
         sizeFlag = true;
+        sizeWarn = `사이즈 불일치 — 속성값 "${attrNums.join('/')}" 기재, 본문 미기재`;
       }
     }
 
@@ -1490,8 +1497,12 @@
     if (!sizeFlag && (sizeItem.details || []).length >= 2) {
       const titleNums   = extractSizeNums(rawTitle);
       const bodyAllNums = sizeItem.details.flatMap(d => extractSizeNums(d));
-      if (titleNums.length > 0 && bodyAllNums.length > 0 && titleNums.some(n => !bodyAllNums.includes(n))) {
-        sizeFlag = true;
+      if (titleNums.length > 0 && bodyAllNums.length > 0) {
+        const conflicted = titleNums.filter(n => !bodyAllNums.includes(n));
+        if (conflicted.length > 0) {
+          sizeFlag = true;
+          sizeWarn = `사이즈 불일치 — 제목 "${conflicted.join('/')}" vs 본문 "${bodyAllNums.join('/')}"`;
+        }
       }
     }
 
@@ -1500,7 +1511,7 @@
         auto: true,
         result: '보류',
         reason: '기타 > 입고된 상품의 사이즈를 확인해 주세요.',
-        warn: '사이즈 불일치 — 속성값/본문 상이'
+        warn: sizeWarn || '사이즈 불일치 — 속성값/본문 상이'
       };
     }
 
@@ -1517,13 +1528,16 @@
       } else if (sizeAttr && !sizeAttr.startsWith('기타') && hasSizeInBody) {
         const attrNums = extractSizeNums(sizeAttr);
         const bodyNums = extractSizeNums(sizeBodyText);
-        if (attrNums.length > 0 && bodyNums.length > 0 && attrNums.some(n => !bodyNums.includes(n))) {
-          flags[IDX_SIZE] = {
-            auto: true,
-            result: '보류',
-            reason: '기타 > 입고된 상품의 사이즈를 확인해 주세요.',
-            warn: '의류/신발/모자 — 속성 vs 본문 사이즈 불일치'
-          };
+        if (attrNums.length > 0 && bodyNums.length > 0) {
+          const mismatched = attrNums.filter(n => !bodyNums.includes(n));
+          if (mismatched.length > 0) {
+            flags[IDX_SIZE] = {
+              auto: true,
+              result: '보류',
+              reason: '기타 > 입고된 상품의 사이즈를 확인해 주세요.',
+              warn: `의류/신발/모자 — 속성값 "${mismatched.join('/')}" vs 본문 사이즈 불일치`
+            };
+          }
         }
       }
     }
