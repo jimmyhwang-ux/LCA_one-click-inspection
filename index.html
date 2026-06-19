@@ -618,7 +618,7 @@
       '모델명': 0, '색상': 0, '소재': 0,
       '사이즈': 1,
       '새상품': 2,
-      '연식': 3, '각인': 3,
+      '연식': 3,
       '구성품': 4,
       '수선': 5,
       '하자': 6,
@@ -1008,12 +1008,18 @@
       }
     }
 
-    // 2) 새상품인데 사용흔적/하자 언급이 있는 경우만 신호 (그 외 사용감 단계는 검수 제외 범위)
-    //    신호는 "새상품 여부" 셀에 표시 — 새상품 판단 자체가 의심스럽다는 의미이므로
+    // 2) 새상품인데 실제 착용/사용 행위 표현이 새상품 항목에 함께 발췌된 경우만 신호
+    //    사용감 참고(7번)는 소재·가공 설명도 포함되므로 신호 기준으로 쓰지 않음
+    //    신호는 "새상품 여부" 셀에 표시
     const statusAttr = (row.statusAttr || '').trim();
     if (statusAttr.includes('새상품')) {
-      if (parsed[IDX_USAGE].found) {
-        flags[IDX_NEW] = `속성값은 새상품인데 본문에 사용감 표현이 있어요`;
+      const newItem = parsed[IDX_NEW];
+      // 새상품 항목 발췌 내용에 착용/사용 행위 키워드가 있으면 신호
+      const usageKeywords = ['착용', '사용', '신어', '써봤', '입어', '한 번', '몇 번', '잠깐'];
+      const newText = (newItem.details || []).join(' ');
+      const hasUsageInNew = usageKeywords.some(kw => newText.includes(kw));
+      if (hasUsageInNew) {
+        flags[IDX_NEW] = `속성값은 새상품인데 본문에 사용 행위 표현이 있어요`;
       } else if (parsed[IDX_FLAW].found) {
         flags[IDX_NEW] = `속성값은 새상품인데 본문에 하자 표현이 있어요`;
       }
