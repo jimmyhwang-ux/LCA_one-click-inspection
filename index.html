@@ -322,6 +322,8 @@
   .batch-table .result-col { min-width: 280px; }
   .icon-dot { font-size: 14px; }
   .detail-text { font-size: 11px; color: var(--text-secondary); margin-top: 2px; line-height: 1.5; }
+  .cell-mismatch { background: var(--red-bg) !important; }
+  .mismatch-text { font-size: 11px; color: var(--red-text); margin-top: 3px; font-weight: 600; line-height: 1.5; }
   .row-pending td { opacity: .4; }
   .row-running td { background: var(--blue-bg) !important; }
 
@@ -726,6 +728,8 @@
     const catIdx   = headers.findIndex(h => h.replace(/"/g,'').trim() === '카테고리');
     const titleIdx = headers.findIndex(h => h.replace(/"/g,'').trim() === '상품명');
     const bodyIdx  = headers.findIndex(h => h.replace(/"/g,'').trim() === '본문내용');
+    const sizeAttrIdx   = headers.findIndex(h => h.replace(/"/g,'').trim() === '상품사이즈(현재)');
+    const statusAttrIdx = headers.findIndex(h => h.replace(/"/g,'').trim() === '상품상태(현재)');
 
     const rows = [];
     for (let i = 1; i < lines.length; i++) {
@@ -739,7 +743,9 @@
         brand  : cols[brandIdx] || '',
         category: cols[catIdx]  || '',
         title  : cols[titleIdx] || '',
-        body   : body
+        body   : body,
+        sizeAttr  : (sizeAttrIdx   >= 0 ? cols[sizeAttrIdx]   : '') || '',
+        statusAttr: (statusAttrIdx >= 0 ? cols[statusAttrIdx] : '') || ''
       });
     }
     return rows;
@@ -834,20 +840,25 @@
       setBatchStatus('s-running', `${i + 1} / ${targets.length} 처리 중`);
 
       let parsed = null;
+      let mismatch = {};
       try {
         const raw = await callAPI(row.title, row.body);
         parsed = parseResponse(raw);
-        batchResults.push({ ...row, parsed, raw, ok: true });
+        mismatch = checkAttrMismatch(row, parsed);
+        batchResults.push({ ...row, parsed, raw, mismatch, ok: true });
       } catch (e) {
         parsed = CRITERIA.map(label => ({ label, found: false, details: [] }));
-        batchResults.push({ ...row, parsed, raw: '오류: ' + e.message, ok: false });
+        batchResults.push({ ...row, parsed, raw: '오류: ' + e.message, mismatch, ok: false });
       }
 
       tr.className = '';
-      const cells = parsed.map(item => {
+      const cells = parsed.map((item, idx) => {
         const icon = item.found ? '🔵' : '❌';
         const detail = (item.details || []).join(' / ');
-        return `<td><span class="icon-dot">${icon}</span>${detail ? `<div class="detail-text">${escHtml(detail.slice(0,60))}${detail.length>60?'…':''}</div>` : ''}</td>`;
+        const warn = mismatch[idx];
+        const cellClass = warn ? 'cell-mismatch' : '';
+        const warnHtml = warn ? `<div class="mismatch-text">⚠ ${escHtml(warn)}</div>` : '';
+        return `<td class="${cellClass}"><span class="icon-dot">${icon}</span>${detail ? `<div class="detail-text">${escHtml(detail.slice(0,60))}${detail.length>60?'…':''}</div>` : ''}${warnHtml}</td>`;
       });
       tr.innerHTML = `
         <td class="care-no">${escHtml(row.careNo)}</td>
@@ -884,19 +895,56 @@
 
   function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+  /* ── 속성값(CSV 메타데이터) vs 본문 발췌 결과 단순 대조 ──
+     판정은 하지 않고, 검수자가 확인해야 할 신호만 표시 */
+  const IDX_SIZE = 1, IDX_FLAW = 6, IDX_USAGE = 7;
+
+  function checkAttrMismatch(row, parsed) {
+    const flags = {}; // { idx: '사유 텍스트' }
+
+    // 1) 사이즈 불일치: 속성값에 적힌 숫자가 본문 발췌 텍스트에 안 보이면 신호
+    const sizeAttr = (row.sizeAttr || '').trim();
+    if (sizeAttr) {
+      const sizeItem = parsed[IDX_SIZE];
+      const bodySizeText = (sizeItem.details || []).join(' ');
+      const numsInAttr = sizeAttr.match(/\d+(\.\d+)?/g) || [];
+      const matched = numsInAttr.length > 0 && numsInAttr.every(n => bodySizeText.includes(n));
+      if (!sizeItem.found || !matched) {
+        flags[IDX_SIZE] = `속성값(${sizeAttr})과 본문 사이즈 표기가 달라요`;
+      }
+    }
+
+    // 2) 새상품인데 사용흔적/하자 언급이 있는 경우만 신호 (그 외 사용감 단계는 검수 제외 범위)
+    const statusAttr = (row.statusAttr || '').trim();
+    if (statusAttr.includes('새상품')) {
+      if (parsed[IDX_USAGE].found) {
+        flags[IDX_USAGE] = `속성값은 새상품인데 본문에 사용감 표현이 있어요`;
+      }
+      if (parsed[IDX_FLAW].found) {
+        flags[IDX_FLAW] = `속성값은 새상품인데 본문에 하자 표현이 있어요`;
+      }
+    }
+
+    return flags;
+  }
+
   function exportCSV() {
     if (!batchResults.length) return;
-    const headers = ['케어번호','브랜드','카테고리','상품명','모델명/색상/소재','사이즈','새상품여부','제조연식각인','기재구성품','수선각인여부','하자기재여부','사용감참고','AI원문'];
+    const headers = ['케어번호','브랜드','카테고리','상품명','상품사이즈(현재)','상품상태(현재)','모델명/색상/소재','사이즈','새상품여부','제조연식각인','기재구성품','수선각인여부','하자기재여부','사용감참고','확인필요신호','AI원문'];
     const rows = batchResults.map(r => {
       const cols = r.parsed.map(item => {
         const flag = item.found ? '🔵' : '❌';
         const detail = (item.details || []).join(' | ');
         return `"${flag} ${detail.replace(/"/g,'""')}"`;
       });
+      const mismatchText = Object.values(r.mismatch || {}).join(' / ');
       return [
         `"${r.careNo}"`,`"${r.brand}"`,`"${r.category}"`,
         `"${r.title.replace(/"/g,'""')}"`,
+        `"${(r.sizeAttr||'').replace(/"/g,'""')}"`,
+        `"${(r.statusAttr||'').replace(/"/g,'""')}"`,
         ...cols,
+        `"${mismatchText.replace(/"/g,'""')}"`,
         `"${(r.raw||'').replace(/"/g,'""').replace(/\n/g,' ')}"`
       ].join(',');
     });
