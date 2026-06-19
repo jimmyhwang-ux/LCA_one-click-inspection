@@ -430,6 +430,7 @@
   }
   .detail-text.truncatable:hover .detail-tooltip { visibility: visible; opacity: 1; }
   .cell-mismatch { background: var(--red-bg) !important; }
+  .cell-warn { background: #FFF8E1 !important; }
   .mismatch-text { font-size: 11px; color: var(--red-text); margin-top: 3px; font-weight: 600; line-height: 1.5; }
   .row-pending td { opacity: .4; }
   .row-running td { background: var(--blue-bg) !important; }
@@ -1130,9 +1131,11 @@
       const cells = parsed.map((item, idx) => {
         const icon = item.found ? '🔵' : '❌';
         const detail = (item.details || []).join(' / ');
-        const warn = mismatch[idx];
-        const cellClass = warn ? 'cell-mismatch' : '';
-        const warnHtml = warn ? `<div class="mismatch-text">⚠ ${escHtml(warn)}</div>` : '';
+        const flag = mismatch[idx];
+        const cellClass = flag ? (flag.auto ? 'cell-mismatch' : 'cell-warn') : '';
+        const warnHtml = flag
+          ? `<div class="mismatch-text">${flag.auto ? '⚠ ' : 'ℹ '}${escHtml(flag.warn)}</div>`
+          : '';
         let detailHtml = '';
         if (detail) {
           if (detail.length > 60) {
@@ -1227,45 +1230,143 @@
 
   function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-  /* ── 속성값(CSV 메타데이터) vs 본문 발췌 결과 단순 대조 ──
-     판정은 하지 않고, 검수자가 확인해야 할 신호만 표시 */
-  const IDX_SIZE = 1, IDX_NEW = 2, IDX_FLAW = 6, IDX_USAGE = 7;
+  /* ── 선판정 로직 ──────────────────────────────────────────
+     AI가 자동 판정하는 케이스 (검수결과/상세사유 자동 기입):
+       1. 모델명/색상/소재 — 본문 내 중복 기재 + 서로 다름
+       2. 기재 구성품 — 풀구성/풀박스/구매 당시 그대로 등 모호 표현
+       4-① 사이즈 — 속성값 vs 본문 발췌 다름
+       4-② 사이즈 — 제목 vs 본문 내용 다르게 기재
+       5. 의류/신발/모자 + 속성 기타 + 본문 사이즈 미기재
+       6. 의류/신발/모자 + 속성 vs 본문 사이즈 다름
+     검수자가 실물 보고 선택하는 케이스 (알림만):
+       3. 새상품 여부 — 본문 또는 속성 중 하나라도 기재
+  ──────────────────────────────────────────────────────── */
+  const IDX_MODEL = 0, IDX_SIZE = 1, IDX_NEW = 2, IDX_COMP = 4;
+
+  const CLOTHING_CATEGORIES = ['의류', '신발', '모자', '스니커즈', '부츠', '샌들', '로퍼', '플랫'];
+
+  function isClothingCategory(category) {
+    return CLOTHING_CATEGORIES.some(c => (category || '').includes(c));
+  }
+
+  // 숫자 사이즈 추출 (42, 250, 105 등)
+  function extractSizeNums(text) {
+    return (text || '').match(/\b\d{2,3}(\.\d)?\b/g) || [];
+  }
 
   function checkAttrMismatch(row, parsed) {
-    const flags = {}; // { idx: '사유 텍스트' }
+    // flags: { idx: { auto: bool, result: string, reason: string, warn: string } }
+    // auto=true  → CSV에 검수결과/상세사유 자동 기입
+    // auto=false → 알림만, 검수자가 템플릿 선택
+    const flags = {};
 
-    // 1) 사이즈 불일치: 속성값에 적힌 숫자가 본문 발췌 텍스트에 안 보이면 신호
-    const sizeAttr = (row.sizeAttr || '').trim();
-    if (sizeAttr) {
-      const sizeItem = parsed[IDX_SIZE];
-      const bodySizeText = (sizeItem.details || []).join(' ');
-      const numsInAttr = sizeAttr.match(/\d+(\.\d+)?/g) || [];
-      const matched = numsInAttr.length > 0 && numsInAttr.every(n => bodySizeText.includes(n));
-      if (!sizeItem.found || !matched) {
-        flags[IDX_SIZE] = `속성값(${sizeAttr})과 본문 사이즈 표기가 달라요`;
+    /* ── 1. 모델명/색상/소재: 본문 내 중복 기재 + 서로 다름 ── */
+    const modelItem = parsed[IDX_MODEL];
+    if (modelItem.found && (modelItem.details || []).length >= 2) {
+      // 발췌된 여러 줄 중 색상·소재 키워드가 서로 충돌하는지 AI가 판단하기 어려우므로
+      // 발췌가 2줄 이상이고 내용이 다른 경우 신호
+      const details = modelItem.details;
+      const allSame = details.every(d => d === details[0]);
+      if (!allSame) {
+        flags[IDX_MODEL] = {
+          auto: true,
+          result: '보류',
+          reason: '기타 > 입고된 상품의 모델명/색상/소재를 확인해 주세요.',
+          warn: '본문 내 모델명/색상/소재 중복 기재 — 내용 상이'
+        };
       }
     }
 
-    // 2) 새상품인데 실제 착용/사용 행위 표현이 새상품 항목에 함께 발췌된 경우만 신호
-    //    사용감 참고(7번)는 소재·가공 설명도 포함되므로 신호 기준으로 쓰지 않음
-    //    신호는 "새상품 여부" 셀에 표시
+    /* ── 2. 기재 구성품: 모호한 표현 ── */
+    const compItem = parsed[IDX_COMP];
+    if (compItem.found) {
+      const compText = (compItem.details || []).join(' ');
+      const vagueKeywords = ['풀구성', '풀박스', '구매 당시 그대로', '구매당시그대로', '풀세트', '전부 있', '전부있', '다 있', '다있', '등'];
+      const hasVague = vagueKeywords.some(kw => compText.includes(kw));
+      if (hasVague) {
+        flags[IDX_COMP] = {
+          auto: true,
+          result: '보류',
+          reason: '구성품 확인 필요 > 구성품이 상품 설명과 같은지 확인 후 구매를 결정해 주세요.',
+          warn: '구성품 모호 표현 기재 (풀구성/풀박스 등)'
+        };
+      }
+    }
+
+    /* ── 3. 새상품 여부: 본문 또는 속성 중 하나라도 기재 → 알림만 ── */
+    const newItem = parsed[IDX_NEW];
     const statusAttr = (row.statusAttr || '').trim();
-    if (statusAttr.includes('새상품')) {
-      const newItem = parsed[IDX_NEW];
-      // 새상품 항목 발췌 내용에 착용/사용 행위 키워드가 있으면 신호
-      const usageKeywords = ['착용', '사용', '신어', '써봤', '입어', '한 번', '몇 번', '잠깐'];
-      const negativePrefix = ['미', '안 ', '않', '없', '한번도'];
-      const newText = (newItem.details || []).join(' ');
-      const hasUsageInNew = usageKeywords.some(kw => {
-        const idx = newText.indexOf(kw);
-        if (idx === -1) return false;
-        const before = newText.slice(Math.max(0, idx - 2), idx);
-        return !negativePrefix.some(neg => before.endsWith(neg));
-      });
-      if (hasUsageInNew) {
-        flags[IDX_NEW] = `속성값은 새상품인데 본문에 사용 행위 표현이 있어요`;
-      } else if (parsed[IDX_FLAW].found) {
-        flags[IDX_NEW] = `속성값은 새상품인데 본문에 하자 표현이 있어요`;
+    const newInAttr = statusAttr.includes('새상품') || statusAttr.includes('미사용') || statusAttr.includes('미착용');
+    const newInBody = newItem.found;
+    if (newInAttr || newInBody) {
+      flags[IDX_NEW] = {
+        auto: false,
+        result: '',
+        reason: '',
+        warn: '새상품 기재 — 실물 확인 필요'
+      };
+    }
+
+    /* ── 4. 사이즈: 두 가지 조건 중 하나라도 해당하면 ── */
+    const sizeItem = parsed[IDX_SIZE];
+    const sizeAttr = (row.sizeAttr || '').trim();
+    let sizeFlag = false;
+
+    // 4-① 속성값 vs 본문 발췌 다름
+    if (sizeAttr && sizeAttr !== '기타') {
+      const attrNums = extractSizeNums(sizeAttr);
+      const bodyText = (sizeItem.details || []).join(' ');
+      const bodyNums = extractSizeNums(bodyText);
+      if (attrNums.length > 0 && bodyNums.length > 0) {
+        const mismatch = attrNums.some(n => !bodyNums.includes(n));
+        if (mismatch) sizeFlag = true;
+      } else if (attrNums.length > 0 && !sizeItem.found) {
+        sizeFlag = true;
+      }
+    }
+
+    // 4-② 제목 vs 본문 내용 다르게 기재
+    if (!sizeFlag && sizeItem.found && (sizeItem.details || []).length >= 2) {
+      const titleNums = extractSizeNums(row.title || '');
+      const bodyAllNums = sizeItem.details.flatMap(d => extractSizeNums(d));
+      if (titleNums.length > 0 && bodyAllNums.length > 0) {
+        const conflict = titleNums.some(n => !bodyAllNums.includes(n));
+        if (conflict) sizeFlag = true;
+      }
+    }
+
+    if (sizeFlag) {
+      flags[IDX_SIZE] = {
+        auto: true,
+        result: '보류',
+        reason: '기타 > 입고된 상품의 사이즈를 확인해 주세요.',
+        warn: '사이즈 불일치 — 속성값/본문 상이'
+      };
+    }
+
+    /* ── 5·6. 의류/신발/모자 전용 사이즈 체크 ── */
+    if (!flags[IDX_SIZE] && isClothingCategory(row.category)) {
+      // 5. 속성 기타 + 본문 사이즈 미기재
+      if (sizeAttr === '기타' && !sizeItem.found) {
+        flags[IDX_SIZE] = {
+          auto: true,
+          result: '보류',
+          reason: '기타 > 입고된 상품의 사이즈를 확인해 주세요.',
+          warn: '의류/신발/모자 — 속성 기타 + 본문 사이즈 미기재'
+        };
+      }
+      // 6. 속성 vs 본문 사이즈 다름 (4-①과 동일 로직, 기타 포함)
+      else if (sizeAttr && sizeItem.found) {
+        const attrNums = extractSizeNums(sizeAttr);
+        const bodyNums = extractSizeNums((sizeItem.details || []).join(' '));
+        if (attrNums.length > 0 && bodyNums.length > 0 && attrNums.some(n => !bodyNums.includes(n))) {
+          flags[IDX_SIZE] = {
+            auto: true,
+            result: '보류',
+            reason: '기타 > 입고된 상품의 사이즈를 확인해 주세요.',
+            warn: '의류/신발/모자 — 속성 vs 본문 사이즈 불일치'
+          };
+        }
       }
     }
 
@@ -1274,24 +1375,47 @@
 
   function exportCSV() {
     if (!batchResults.length) return;
-    const headers = ['케어번호','브랜드','카테고리','상품명','상품사이즈(현재)','상품상태(현재)','모델명/색상/소재','사이즈','새상품여부','제조연식각인','기재구성품','수선각인여부','하자기재여부','사용감참고','확인필요신호','AI원문'];
+    const headers = [
+      '케어번호','브랜드','카테고리','상품명','상품사이즈(현재)','상품상태(현재)',
+      '검수결과','상세사유','선판정신호',
+      '모델명/색상/소재','사이즈','새상품여부','제조연식각인','기재구성품','수선각인여부','하자기재여부','사용감참고',
+      'AI원문'
+    ];
     const rows = batchResults.map(r => {
+      // 자동 판정 결과 취합
+      let autoResult = '';
+      let autoReason = '';
+      const warnParts = [];
+
+      Object.values(r.mismatch || {}).forEach(f => {
+        if (f.warn) warnParts.push(f.warn);
+        if (f.auto && f.result && !autoResult) {
+          autoResult = f.result;
+          autoReason = f.reason;
+        }
+      });
+
       const cols = r.parsed.map(item => {
         const flag = item.found ? '🔵' : '❌';
         const detail = (item.details || []).join(' | ');
-        return `"${flag} ${detail.replace(/"/g,'""')}"`;
+        return `"${(flag + ' ' + detail).replace(/"/g,'""')}"`;
       });
-      const mismatchText = Object.values(r.mismatch || {}).join(' / ');
+
       return [
-        `"${r.careNo}"`,`"${r.brand}"`,`"${r.category}"`,
+        `"${r.careNo}"`,
+        `"${r.brand}"`,
+        `"${r.category}"`,
         `"${r.title.replace(/"/g,'""')}"`,
         `"${(r.sizeAttr||'').replace(/"/g,'""')}"`,
         `"${(r.statusAttr||'').replace(/"/g,'""')}"`,
+        `"${autoResult}"`,
+        `"${autoReason.replace(/"/g,'""')}"`,
+        `"${warnParts.join(' / ').replace(/"/g,'""')}"`,
         ...cols,
-        `"${mismatchText.replace(/"/g,'""')}"`,
         `"${(r.raw||'').replace(/"/g,'""').replace(/\n/g,' ')}"`
       ].join(',');
     });
+
     const csv = '\uFEFF' + headers.join(',') + '\n' + rows.join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
