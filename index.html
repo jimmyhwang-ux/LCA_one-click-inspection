@@ -301,8 +301,15 @@
   .result-item:last-child { border-bottom: none; }
 
   .result-item-header {
-    display: flex; align-items: center; gap: 8px;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
   }
+  .result-badge {
+    font-size: 11px; font-weight: 600;
+    padding: 2px 9px; border-radius: 20px;
+    flex-shrink: 0;
+  }
+  .result-badge.found { background: #E6EEF7; color: #1A5490; }
+  .result-badge.notfound { background: var(--bg-tertiary); color: var(--text-muted); }
   .result-dot-wrap {
     width: 18px; height: 18px;
     border: 1.5px solid var(--border-mid);
@@ -607,11 +614,11 @@
         </div>
         <div class="judge-card" id="judge-card">
           <div class="judge-card-title">
-            <i class="ti ti-gavel"></i> 판정
+            <i class="ti ti-template"></i> 보류 사유 템플릿 예시
           </div>
           <div class="judge-empty" id="judge-empty">
             <i class="ti ti-clipboard-list"></i>
-            <p>AI 추출 완료 후<br>항목별 판정을 진행하세요</p>
+            <p>AI 추출 완료 후<br>보류 사유 템플릿을 확인하세요</p>
           </div>
           <div id="judge-content" style="display:none"></div>
         </div>
@@ -729,29 +736,36 @@
   function loadHistory(idx) {
     const h = history[idx];
     document.getElementById('inp-content').value = h.content;
-    renderParsed(h.parsed, h.raw);
+    const mismatch = checkAttrMismatch({ sizeAttr: '', statusAttr: '', category: '', title: '' }, h.parsed);
+    renderParsed(h.parsed, h.raw, mismatch);
     setStatus('s-done', '검수 완료');
   }
 
-  function renderParsed(items, raw) {
+  function renderParsed(items, raw, mismatch) {
+    mismatch = mismatch || {};
     const pass = items.filter(i => i.found).length;
     const fail = items.length - pass;
     setMetrics(items.length, pass, fail);
 
-    const itemsHtml = items.map(item => {
+    const itemsHtml = items.map((item, idx) => {
       const bullets = (item.details && item.details.length)
         ? item.details.map(d => `<div class="result-bullet">${escHtml(d)}</div>`).join('')
         : item.detail
           ? `<div class="result-bullet">${escHtml(item.detail)}</div>`
           : '';
+      const flag = mismatch[idx];
+      const warnHtml = flag
+        ? `<div style="margin-top:5px;font-size:11px;font-weight:600;color:${flag.auto ? 'var(--red-text)' : 'var(--accent)'};padding:4px 8px;background:${flag.auto ? 'var(--red-bg)' : 'var(--accent-soft-bg)'};border-radius:6px">${flag.auto ? '⚠ 자동 보류 — ' : 'ℹ '}${escHtml(flag.warn)}</div>`
+        : '';
 
       return `
         <li class="result-item">
           <div class="result-item-header">
             <span class="result-name">${escHtml(item.label)}</span>
-            <span class="result-status-icon">${item.found ? '🔵' : '❌'}</span>
+            <span class="result-badge ${item.found ? 'found' : 'notfound'}">${item.found ? '기재' : '미기재'}</span>
           </div>
           ${bullets ? `<div class="result-bullets">${bullets}</div>` : ''}
+          ${warnHtml}
         </li>
       `;
     }).join('');
@@ -947,6 +961,8 @@
       if (!raw) throw new Error('AI 응답이 비어있습니다');
 
       const parsed = parseResponse(raw);
+      // 개별 검수용 선판정 (속성값 없이 본문만으로 가능한 항목)
+      const mismatch = checkAttrMismatch({ sizeAttr: '', statusAttr: '', category: '', title: '' }, parsed);
       const pass   = parsed.filter(i => i.found).length;
 
       const now  = new Date();
@@ -955,7 +971,7 @@
       history.push({ title: previewTitle, content, parsed, raw, time, pass, total: parsed.length });
       renderHistory();
 
-      renderParsed(parsed, raw);
+      renderParsed(parsed, raw, mismatch);
       setStatus('s-done', '검수 완료');
 
     } catch (e) {
