@@ -425,7 +425,7 @@
     min-width: 220px; overflow: hidden;
   }
   .judge-item .tmpl-dd {
-    top: auto; bottom: calc(100% + 4px); left: auto; right: 0;
+    left: auto; right: 0;
   }
   .tmpl-dd-item {
     padding: 8px 12px; font-size: 12px; color: var(--text-primary);
@@ -1185,7 +1185,22 @@
     if (!menu) return;
     const isOpen = menu.style.display !== 'none';
     document.querySelectorAll('.tmpl-dd').forEach(d => d.style.display = 'none');
-    menu.style.display = isOpen ? 'none' : 'block';
+    if (isOpen) return;
+
+    // 위/아래 공간 계산해서 자동 전환
+    menu.style.display = 'block';
+    const btnRect = dd.getBoundingClientRect();
+    const menuH = menu.offsetHeight;
+    const spaceBelow = window.innerHeight - btnRect.bottom;
+    const spaceAbove = btnRect.top;
+
+    if (spaceBelow >= menuH || spaceBelow >= spaceAbove) {
+      menu.style.top = 'calc(100% + 4px)';
+      menu.style.bottom = 'auto';
+    } else {
+      menu.style.top = 'auto';
+      menu.style.bottom = 'calc(100% + 4px)';
+    }
   }
 
   document.addEventListener('click', e => {
