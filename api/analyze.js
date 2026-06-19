@@ -2,9 +2,37 @@
 // POST { title?: string, content: string } -> { raw: string }
 // API 키는 절대 클라이언트로 노출되지 않고, 서버 환경변수(ANTHROPIC_API_KEY)에서만 사용됩니다.
 
+// 토큰 검증 헬퍼
+async function verifyToken(token, secret) {
+  if (!token || !secret) return false;
+  const parts = token.split('.');
+  if (parts.length !== 2) return false;
+  const [b64, sigB64] = parts;
+  try {
+    const payload = JSON.parse(Buffer.from(b64, 'base64url').toString());
+    if (!payload.exp || Date.now() > payload.exp) return false;
+    const key = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['verify']
+    );
+    const sig = Buffer.from(sigB64, 'base64url');
+    return await crypto.subtle.verify('HMAC', key, sig, new TextEncoder().encode(b64));
+  } catch { return false; }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: { message: 'Method not allowed' } });
+  }
+
+  // 토큰 검증
+  const secret = process.env.OCCC_SECRET;
+  const token  = (req.headers['x-occc-token'] || '').trim();
+  if (!(await verifyToken(token, secret))) {
+    return res.status(401).json({ error: { message: '인증이 필요합니다.' } });
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
