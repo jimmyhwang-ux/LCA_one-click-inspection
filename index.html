@@ -1445,28 +1445,22 @@
     const vagueKeywords = ['풀구성', '풀박스', '구매 당시 그대로', '구매당시그대로', '풀세트', '풀셋', '전부 있', '전부있', '다 있', '다있', '구성 동일', '구성이 동일', '동일한 구성', '구성과 동일', '구성그대로', '구성 그대로'];
     const matchedVague = vagueKeywords.find(kw => textFor(IDX_COMP).includes(kw));
     if (matchedVague) {
-      // 모호 표현이 감지됐는데 AI가 구성품 발췌를 못 했으면 → 본문에서 해당 문장 직접 찾아서 강제 주입
-      if (!parsed[IDX_COMP].found) {
-        // 마침표 없는 본문 대비 — 키워드 앞뒤 어절 기반으로 문장 추출
+      // 모호 표현 감지 시 — found 여부 무관하게 해당 문장 항상 발췌에 추가
+      {
         const _kwIdx = fullRaw.indexOf(matchedVague);
-        let _extracted = '';
         if (_kwIdx >= 0) {
-          // 키워드 앞: 이전 구분자(, 공백덩어리 등)부터 / 뒤: 다음 구분자까지
           const _before = fullRaw.slice(0, _kwIdx);
           const _after  = fullRaw.slice(_kwIdx + matchedVague.length);
-          // 앞쪽: 마지막 쉼표·괄호·공백2개 이후부터
-          const _bMatch = _before.match(/[,()\s{2}]([^,()]+)$/);
-          const _bPart  = _bMatch ? _bMatch[1].trim() : _before.slice(-20).trim();
-          // 뒤쪽: 다음 쉼표·괄호·마침표 전까지
-          const _aMatch = _after.match(/^([^,().!?]*)/);
-          const _aPart  = _aMatch ? _aMatch[1].trim() : _after.slice(0, 15).trim();
-_extracted = (_bPart ? _bPart + ' ' : '') + matchedVague + (_aPart ? ' ' + _aPart : '');
-        }
-        const sentences = _extracted ? [_extracted] : [];
-        if (sentences.length > 0) {
-          parsed[IDX_COMP].found = true;
-          parsed[IDX_COMP].details = sentences;
-          parsed[IDX_COMP].detail  = sentences.join(' / ');
+          const _bMatch = _before.match(/[,(]+([^,()]+)$/);
+          const _bPart  = _bMatch ? _bMatch[1].trim() : _before.slice(-15).trim();
+          const _aMatch = _after.match(/^([^,().!?(]+)/);
+          const _aPart  = _aMatch ? _aMatch[1].trim() : '';
+          const _extracted = ((_bPart ? _bPart + ' ' : '') + matchedVague + _aPart).trim();
+          if (_extracted && !parsed[IDX_COMP].details.includes(_extracted)) {
+            parsed[IDX_COMP].found = true;
+            parsed[IDX_COMP].details.push(_extracted);
+            parsed[IDX_COMP].detail = parsed[IDX_COMP].details.join(' / ');
+          }
         }
       }
       flags[IDX_COMP] = {
