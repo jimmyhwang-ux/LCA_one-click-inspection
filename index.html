@@ -1447,12 +1447,22 @@
     if (matchedVague) {
       // 모호 표현이 감지됐는데 AI가 구성품 발췌를 못 했으면 → 본문에서 해당 문장 직접 찾아서 강제 주입
       if (!parsed[IDX_COMP].found) {
-        // 본문에서 matchedVague 키워드가 포함된 문장 추출 — 마침표/줄바꿈/공백 구분 모두 처리
-        const _parts = fullRaw.split(/[.!?\n]+/).map(s => s.trim()).filter(Boolean);
-        // 마침표로 안 끊기는 경우 대비 — 키워드 전후 30자 컨텍스트도 포함
+        // 마침표 없는 본문 대비 — 키워드 앞뒤 어절 기반으로 문장 추출
         const _kwIdx = fullRaw.indexOf(matchedVague);
-        const _ctx = _kwIdx >= 0 ? fullRaw.slice(Math.max(0, _kwIdx - 15), _kwIdx + matchedVague.length + 20).trim() : '';
-        const sentences = [...new Set([..._parts.filter(s => s.includes(matchedVague)), _ctx].filter(Boolean))];
+        let _extracted = '';
+        if (_kwIdx >= 0) {
+          // 키워드 앞: 이전 구분자(, 공백덩어리 등)부터 / 뒤: 다음 구분자까지
+          const _before = fullRaw.slice(0, _kwIdx);
+          const _after  = fullRaw.slice(_kwIdx + matchedVague.length);
+          // 앞쪽: 마지막 쉼표·괄호·공백2개 이후부터
+          const _bMatch = _before.match(/[,()\s{2}]([^,()]+)$/);
+          const _bPart  = _bMatch ? _bMatch[1].trim() : _before.slice(-20).trim();
+          // 뒤쪽: 다음 쉼표·괄호·마침표 전까지
+          const _aMatch = _after.match(/^([^,().!?]*)/);
+          const _aPart  = _aMatch ? _aMatch[1].trim() : _after.slice(0, 15).trim();
+_extracted = (_bPart ? _bPart + ' ' : '') + matchedVague + (_aPart ? ' ' + _aPart : '');
+        }
+        const sentences = _extracted ? [_extracted] : [];
         if (sentences.length > 0) {
           parsed[IDX_COMP].found = true;
           parsed[IDX_COMP].details = sentences;
