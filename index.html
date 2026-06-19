@@ -301,7 +301,7 @@
   .result-item:last-child { border-bottom: none; }
 
   .result-item-header {
-    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    display: flex; align-items: center; gap: 8px;
   }
   .result-badge {
     font-size: 11px; font-weight: 600;
@@ -614,7 +614,7 @@
         </div>
         <div class="judge-card" id="judge-card">
           <div class="judge-card-title">
-            <i class="ti ti-template"></i> 보류 사유 템플릿 예시
+            <i class="ti ti-template"></i> 실물 비교 후 판정 예시
           </div>
           <div class="judge-empty" id="judge-empty">
             <i class="ti ti-clipboard-list"></i>
@@ -846,7 +846,7 @@
         return `
           <div class="judge-item">
             <div class="judge-header">
-              <span class="judge-name">${escHtml(item.label)} 🔵</span>
+              <span class="judge-name">${escHtml(item.label)}</span>
             </div>
             <div style="padding:4px 8px 8px">${tmplRows}</div>
           </div>`;
@@ -1208,7 +1208,9 @@
 
       tr.className = '';
       const cells = parsed.map((item, idx) => {
-        const icon = item.found ? '🔵' : '❌';
+        const icon = item.found
+          ? '<span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;background:#E6EEF7;color:#1A5490">기재</span>'
+          : '<span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;background:var(--bg-tertiary);color:var(--text-muted)">미기재</span>';
         const detail = (item.details || []).join(' / ');
         const flag = mismatch[idx];
         const cellClass = flag ? (flag.auto ? 'cell-mismatch' : 'cell-warn') : '';
@@ -1484,7 +1486,7 @@
       });
 
       const cols = r.parsed.map(item => {
-        const flag = item.found ? '🔵' : '❌';
+        const flag = item.found ? '기재' : '미기재';
         const detail = (item.details || []).join(' | ');
         return `"${(flag + ' ' + detail).replace(/"/g,'""')}"`;
       });
