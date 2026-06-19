@@ -586,6 +586,7 @@
           <table class="batch-table">
             <thead>
               <tr>
+                <th style="width:32px;text-align:center"><input type="checkbox" id="chk-all" onclick="toggleAllChecks(this)" style="cursor:pointer"></th>
                 <th style="width:90px">케어번호</th>
                 <th style="width:80px">브랜드</th>
                 <th>상품명</th>
@@ -1065,6 +1066,7 @@
         ? `<div class="detail-text truncatable">${escHtml(row.body.slice(0,40))}…<div class="detail-tooltip">${escHtml(row.body)}</div></div>`
         : `<div class="detail-text">${escHtml(row.body)}</div>`;
       tr.innerHTML = `
+        <td style="text-align:center"><input type="checkbox" class="row-chk" data-idx="${i}" style="cursor:pointer"></td>
         <td class="care-no">${escHtml(row.careNo)}</td>
         <td class="brand-col">${escHtml(row.brand)}</td>
         <td class="title-col">${escHtml(row.title)}</td>
@@ -1139,6 +1141,7 @@
         return `<td class="${cellClass}"><span class="icon-dot">${icon}</span>${detailHtml}${warnHtml}${tmplHtml}</td>`;
       });
       tr.innerHTML = `
+        <td style="text-align:center"><input type="checkbox" class="row-chk" data-idx="${i}" style="cursor:pointer"></td>
         <td class="care-no">${escHtml(row.careNo)}</td>
         <td class="brand-col">${escHtml(row.brand)}</td>
         <td class="title-col">${escHtml(row.title)}</td>
@@ -1203,6 +1206,10 @@
   document.addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') runAnalysis();
   });
+
+  function toggleAllChecks(masterChk) {
+    document.querySelectorAll('.row-chk').forEach(chk => chk.checked = masterChk.checked);
+  }
 
   function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
