@@ -390,16 +390,24 @@
   }
 
   .batch-table-wrap { overflow-x: auto; background: var(--bg-primary); box-shadow: var(--shadow-card); border-radius: var(--radius-lg); }
-  .batch-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 700px; }
+  .batch-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1400px; }
   .batch-table th {
     background: var(--bg-secondary); padding: 10px 12px; text-align: left;
     font-weight: 500; font-size: 11px; color: var(--text-secondary);
     border-bottom: 0.5px solid var(--border-light); white-space: nowrap;
   }
   .batch-table td {
-    padding: 10px 12px; border-bottom: 0.5px solid var(--border-light);
-    vertical-align: top; color: var(--text-primary);
+    padding: 8px 10px; border-bottom: 0.5px solid var(--border-light);
+    vertical-align: top; color: var(--text-primary); min-width: 80px;
   }
+  .batch-table td .result-badge-inline {
+    display: inline-block;
+    font-size: 10px; font-weight: 600;
+    padding: 2px 7px; border-radius: 20px;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .batch-table td .result-badge-inline.found { background: #E6EEF7; color: #1A5490; }
+  .batch-table td .result-badge-inline.notfound { background: var(--bg-tertiary); color: var(--text-muted); }
   .batch-table tr:last-child td { border-bottom: none; }
   .batch-table tr:hover td { background: var(--bg-secondary); }
   .batch-table .care-no { font-weight: 600; white-space: nowrap; }
@@ -476,6 +484,33 @@
     border-radius: 50%;
     animation: spin .65s linear infinite;
   }
+  /* 사이드바 기준 툴팁 */
+  .criteria-item {
+    position: relative;
+    font-size: 11px; color: var(--text-secondary);
+    padding: 5px 8px; background: var(--bg-secondary);
+    border-radius: 6px; cursor: default;
+  }
+  .criteria-item:hover { background: var(--bg-tertiary); }
+  .criteria-tooltip {
+    display: none;
+    position: absolute;
+    left: calc(100% + 8px);
+    top: 0;
+    z-index: 200;
+    width: 220px;
+    background: var(--text-primary);
+    color: #fff;
+    font-size: 11px;
+    line-height: 1.7;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    box-shadow: 0 6px 20px rgba(0,0,0,.18);
+    white-space: normal;
+    pointer-events: none;
+  }
+  .criteria-item:hover .criteria-tooltip { display: block; }
+
   @keyframes spin { to { transform: rotate(360deg); } }
 
   @media (max-width: 768px) {
@@ -556,31 +591,52 @@
     <div style="margin-top:auto;padding-top:1rem;border-top:0.5px solid var(--border-light)">
       <div class="section-label" style="margin-bottom:.6rem">검수 항목 기준</div>
       <div style="display:flex;flex-direction:column;gap:4px">
-        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px">모델명 / 색상 / 소재</div>
-        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px">사이즈</div>
-        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px">새상품 여부</div>
-        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px">제조 연식 각인 <span style="color:var(--text-muted);font-size:10px">(에·샤·롤)</span></div>
-        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px">기재 구성품</div>
-        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px">구성품 연식</div>
-        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px">수선 / 각인 여부</div>
-        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px">하자 기재 여부</div>
-        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px">사용감 참고</div>
+        <div class="criteria-item">모델명 / 색상 / 소재
+          <div class="criteria-tooltip">브랜드명, 모델명, 색상, 소재 관련 표현 발췌<br>영문+한글 혼합 컬러명(스톰그레이 등) 포함</div>
+        </div>
+        <div class="criteria-item">사이즈
+          <div class="criteria-tooltip">사이즈·치수·호수 표현<br>숫자+기호만의 치수(60*24*26 등) 포함<br>MM·GM·PM·TPM·BB·NANO·MINI·SMALL·MEDIUM·LARGE 등 명품 사이즈명 포함</div>
+        </div>
+        <div class="criteria-item">새상품 여부
+          <div class="criteria-tooltip">새상품·미사용·미착용·선물·데드스톡 표현<br>해당 키워드 있을 때만 착용 횟수 표현 함께 발췌<br>부정 표현(안 신고·못 신고 등)은 발췌 제외<br>"거의 새상품·준새상품" 등 유사 표현은 ❌</div>
+        </div>
+        <div class="criteria-item">제조 연식 각인 <span style="color:var(--text-muted);font-size:10px">(에·샤·롤)</span>
+          <div class="criteria-tooltip">에르메스·샤넬·롤렉스에 한해서만 적용<br>시리얼·제조년도·각인·날짜 관련 표현<br>다른 브랜드는 표현 있어도 ❌</div>
+        </div>
+        <div class="criteria-item">기재 구성품
+          <div class="criteria-tooltip">케이스·박스·보증서·쇼핑백·영수증·인보이스·택 관련 표현<br>"단품", "본품만" 등 구성품 없음 표현은 ❌</div>
+        </div>
+        <div class="criteria-item">구성품 연식
+          <div class="criteria-tooltip">조건 ① 구성품이 기재되어 있고<br>조건 ② 구매 연도/날짜 표현이 있을 때만 발췌<br>스탬핑 날짜(26년6월14일 등) 포함<br>둘 중 하나라도 없으면 ❌</div>
+        </div>
+        <div class="criteria-item">수선 / 각인 여부
+          <div class="criteria-tooltip">수선·수리·이니셜·각인·커스텀 관련 표현</div>
+        </div>
+        <div class="criteria-item">하자 기재 여부
+          <div class="criteria-tooltip">파손·찍힘·깨짐·찢김·변형 등<br>기능/형태에 영향을 주는 물리적 손상만<br>스크래치·변색·얼룩 등 외관 흔적은 ❌ (사용감 참고로)</div>
+        </div>
+        <div class="criteria-item">사용감 참고
+          <div class="criteria-tooltip">① 스크래치·마모·보풀·변색·얼룩 등 외관 사용 흔적<br>② 제품 소재·가공·디자인 특성 설명<br>(원래 디스트레스드 가공, 밑창이 원래 노란빛 등)</div>
+        </div>
       </div>
 
       <div class="section-label" style="margin-top:1rem;margin-bottom:.6rem">선판정 기준</div>
       <div style="display:flex;flex-direction:column;gap:4px">
-        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px">
+        <div class="criteria-item">
           <span style="color:var(--red-text);font-weight:600;margin-right:4px">⚠</span>구성품 모호 표현 기재
-          <div style="font-size:10px;color:var(--text-muted);margin-top:2px">풀구성·풀박스·풀세트·풀셋 등</div>
+          <div class="criteria-tooltip">풀구성·풀박스·풀세트·풀셋·구성 동일·구성 그대로 등<br>→ 자동 보류 처리</div>
         </div>
-        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px">
+        <div class="criteria-item">
           <span style="color:var(--red-text);font-weight:600;margin-right:4px">⚠</span>사이즈 속성 vs 본문 불일치
+          <div class="criteria-tooltip">속성값 사이즈와 본문 발췌 사이즈가 다를 때<br>속성값이 "기타(상품설명에 작성)" 계열이면 비교 제외<br>→ 자동 보류 처리</div>
         </div>
-        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px">
+        <div class="criteria-item">
           <span style="color:var(--red-text);font-weight:600;margin-right:4px">⚠</span>의류·신발·모자 사이즈 미기재
+          <div class="criteria-tooltip">의류·신발·모자 카테고리에서<br>속성 기타 계열이고 본문 사이즈도 없을 때<br>→ 자동 보류 처리</div>
         </div>
-        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px">
+        <div class="criteria-item">
           <span style="color:#D9822B;font-weight:600;margin-right:4px">ℹ</span>새상품·미사용 기재 — 실물 확인
+          <div class="criteria-tooltip">새상품·미사용·미착용 키워드가 본문 또는 속성에 있을 때<br>부정 표현(안 신고·못 신고 등) 있으면 알림 억제<br>→ 검수자가 실물 보고 판단</div>
         </div>
       </div>
     </div>
@@ -657,22 +713,21 @@
           <table class="batch-table">
             <thead>
               <tr>
-                <th style="width:32px;text-align:center"><input type="checkbox" id="chk-all" onclick="toggleAllChecks(this)" style="cursor:pointer"></th>
                 <th style="width:90px">케어번호</th>
                 <th style="width:80px">브랜드</th>
-                <th>상품명</th>
-                <th>본문내용</th>
+                <th style="width:150px">상품명</th>
+                <th style="width:160px">본문내용</th>
                 <th style="width:70px">속성사이즈</th>
-                <th style="width:90px">속성상태</th>
-                <th>모델/색상/소재</th>
-                <th>사이즈</th>
-                <th>새상품</th>
-                <th>연식각인</th>
-                <th>구성품</th>
-                <th>구성품 연식</th>
-                <th>수선각인</th>
-                <th>하자</th>
-                <th>사용감 참고</th>
+                <th style="width:80px">속성상태</th>
+                <th style="width:130px">모델/색상/소재</th>
+                <th style="width:90px">사이즈</th>
+                <th style="width:90px">새상품</th>
+                <th style="width:80px">연식각인</th>
+                <th style="width:120px">구성품</th>
+                <th style="width:90px">구성품 연식</th>
+                <th style="width:80px">수선각인</th>
+                <th style="width:80px">하자</th>
+                <th style="width:130px">사용감 참고</th>
               </tr>
             </thead>
             <tbody id="batch-tbody"></tbody>
@@ -1159,14 +1214,13 @@
         ? `<div class="detail-text truncatable">${escHtml(row.body.slice(0,40))}…<div class="detail-tooltip">${escHtml(row.body)}</div></div>`
         : `<div class="detail-text">${escHtml(row.body)}</div>`;
       tr.innerHTML = `
-        <td style="text-align:center"><input type="checkbox" class="row-chk" data-idx="${i}" style="cursor:pointer"></td>
         <td class="care-no">${escHtml(row.careNo)}</td>
         <td class="brand-col">${escHtml(row.brand)}</td>
         <td class="title-col">${escHtml(row.title)}</td>
         <td class="body-col">${bodyPreview}</td>
         <td>${escHtml(row.sizeAttr) || '—'}</td>
         <td>${escHtml(row.statusAttr) || '—'}</td>
-        ${Array(8).fill('<td>—</td>').join('')}
+        ${Array(9).fill('<td>—</td>').join('')}
       `;
       document.getElementById('batch-tbody').appendChild(tr);
     });
@@ -1209,8 +1263,8 @@
       tr.className = '';
       const cells = parsed.map((item, idx) => {
         const icon = item.found
-          ? '<span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;background:#E6EEF7;color:#1A5490">기재</span>'
-          : '<span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;background:var(--bg-tertiary);color:var(--text-muted)">미기재</span>';
+          ? '<span class="result-badge-inline found">기재</span>'
+          : '<span class="result-badge-inline notfound">미기재</span>';
         const detail = (item.details || []).join(' / ');
         const flag = mismatch[idx];
         const cellClass = flag ? (flag.auto ? 'cell-mismatch' : 'cell-warn') : '';
@@ -1242,10 +1296,9 @@
               <div class="tmpl-dd" style="display:none">${optHtml}</div>
             </div>`;
         }
-        return `<td class="${cellClass}"><span class="icon-dot">${icon}</span>${detailHtml}${warnHtml}${tmplHtml}</td>`;
+        return `<td class="${cellClass}">${icon}${detailHtml}${warnHtml}${tmplHtml}</td>`;
       });
       tr.innerHTML = `
-        <td style="text-align:center"><input type="checkbox" class="row-chk" data-idx="${i}" style="cursor:pointer"></td>
         <td class="care-no">${escHtml(row.careNo)}</td>
         <td class="brand-col">${escHtml(row.brand)}</td>
         <td class="title-col">${escHtml(row.title)}</td>
