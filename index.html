@@ -1314,12 +1314,14 @@
     return CLOTHING_CATEGORIES.some(c => (category || '').includes(c));
   }
 
-  // 사이즈 추출 (숫자: 42, 250, 105 등 / 영문: XS, S, M, L, XL, XXL, XXXL, FREE, ONE SIZE 등)
+  // 사이즈 추출 (숫자 / 영문 의류 / 명품 사이즈명 전체)
   function extractSizeNums(text) {
     const t = (text || '').toUpperCase();
     const nums = t.match(/\b\d{2,3}(\.\d)?\b/g) || [];
-    const letters = t.match(/\b(XXXL|XXL|XL|XS|S|M|L|FREE|ONE\s*SIZE|ONESIZE)\b/g) || [];
-    return [...nums, ...letters.map(s => s.replace(/\s/g, ''))];
+    const letters = t.match(/\b(XXXL|XXL|XL|XS|FREE|ONE\s*SIZE|ONESIZE|GM|MM|TPM|BB|PM|NANO|PETITE|JUMBO|MAXI|MICRO|COMPACT|LONG|POCHETTE|MINI|SMALL|MEDIUM|LARGE|TEEN|TOY|REGULAR)\b/g) || [];
+    const korean = (text || '').match(/미니|스몰|라지|미디움|미듐|맥시|나노|점보|마이크로|컴팩트|포쉐트|롱|틴|토이|레귤러/g) || [];
+    const sml = t.match(/(?<![A-Z])\b(S|M|L)\b(?![A-Z])/g) || [];
+    return [...nums, ...letters.map(s => s.replace(/\s/g, '')), ...korean, ...sml];
   }
 
   function checkAttrMismatch(row, parsed) {
@@ -1332,7 +1334,7 @@
     const compItem = parsed[IDX_COMP];
     if (compItem.found) {
       const compText = (compItem.details || []).join(' ');
-      const vagueKeywords = ['풀구성', '풀박스', '구매 당시 그대로', '구매당시그대로', '풀세트', '전부 있', '전부있', '다 있', '다있', '등'];
+      const vagueKeywords = ['풀구성', '풀박스', '구매 당시 그대로', '구매당시그대로', '풀세트', '풀셋', '전부 있', '전부있', '다 있', '다있', '등'];
       const hasVague = vagueKeywords.some(kw => compText.includes(kw));
       if (hasVague) {
         flags[IDX_COMP] = {
