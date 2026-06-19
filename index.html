@@ -187,7 +187,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
-    align-items: start;
+    align-items: stretch;
   }
   @media (max-width: 900px) { .single-layout { grid-template-columns: 1fr; } }
 
@@ -198,6 +198,8 @@
     border-radius: var(--radius-lg);
     padding: 1.5rem;
     min-height: 420px;
+    display: flex;
+    flex-direction: column;
   }
 
   .judge-card {
@@ -206,6 +208,8 @@
     border-radius: var(--radius-lg);
     padding: 1.5rem;
     min-height: 420px;
+    display: flex;
+    flex-direction: column;
   }
   .judge-card-title {
     display: flex; align-items: center; gap: 7px;
@@ -456,10 +460,10 @@
 <div class="layout">
   <aside class="sidebar">
     <div class="logo">
-      <div class="logo-icon">
-        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACwAAAAsCAYAAAAehFoBAAAMkklEQVR4AeyXa3BV1RXH1zrn3JubkEAwRIK8RG2NBq1lmFZeQsD6quKjjuOMhWJH6qMz6kzH6UfjByp+6Bc/tLXOaGt9dBwVfDHFqoi81Ypao6AiQcAoEPIkyb33nLO7fju5MSIitmNn2vEMK3sevdb6//9n7X32uQTyP3Z9K/ibXrD/zw4757SpyQWPPvpoiOH/p50EAywMH45jwTxqhwEBUFVdU5OmV111VYLhA06M8etYqQYMsDB8OIjBeTS8LxVMMSAArlv31uinXtw494nn11/z1IsbLn1m7abTACV2rN1BCLnUUAsGWAOYG+fCQQxOuMk5kh1RMAUUP79589gVL6z/Xeuh9vcKSfxSEOiDiXMr+/oLzY8/9/KWp1/aeHmpO4g5EgFzxBBCLjXUggEWmGDDAReccKOB2sPtC4JJpOCZNZvO7egpvBsEwY2nTBo3Zub3Tk/PmTY1mfP9huSs+pO1elTlD/oL8RMrX9hw/0D3NGU8nIA5hDKSm7caasEAC0yw4YALTrjRgJbD8T4neM2aNRGJT7+06ZL+YvHvo6sqRxtg4fv1p6Rja6p1ZGVFMHpkVXDKxHFu7rQz4oaTJ8WpS5esfHHD3wCmiwjDx/CZwyeH3IaTJ8fUggEWmGDDAReccD+9dvNFaDlc9JBglq2xsTFe9fLm0/OF4hM11SNl9lkN8cgRFdl8oaBxnEiSpBoniViXJEnT6LSTJoVnnXpyIXXuvCdf3HAPwu64Q5QRK/nEyCG3/qSJIbVggJWAadhwwAUn3Pl84Um0IBpt4GHDBGvKRF+h+OeK8rLoB1O/WwyDICrGibOlIlQSokGg+M5AdcqEusypkyfGhTj+xVNrNl7M8tMVDJ85YuSQS42BGabHAMduxTADgSsMAs+NBrQQBIcR84IB52blmo3X2zJOn3rKicXysrJMnCBWxeY8sKqKqr9nVLtcoVDUU08cr8eNqhITdhe5dAXDZ44YOeRSY6YWA8Mb3HavQaASJ4mDGw02Nx1NxEsaveBB8LBYLP7q+NGjZHxtTVCMY2fAnxNrANR6EnyLqxNxYaBh/YkTY3uc059cs2mRT7I/+MwRI8dqLF2GxNo9+B7P0vGBFLjRgBY0WV6IRnL81wvnGdvklv2dkyaMs9PGBWnqJIoie+qA8BfMciEQtUjRts3Y46p19MhKyJbalP9XjOOlzB1vsXyh6MIwBNPHTISA4W/sT8m3Uf1TqQZosfvvoM1ShC4PqcnHxauqKsqlZlSVC6NIcrkybWtrk0KhIBAdTiCDlwF6gjAMgvHH11i/3exnN7w+efXaLVPsZvYJtceZyDDI5XKSz+f14MGDHs/qBh5YdRBJRHVwu5kb28tdO3qUQxPaZPAKaPWanTtzaSpzjhtZZUJzwZtvvik333yzLF26VBYtWiRvvfWWZLNZSS1psM4PqkMEnCBinYwzmUiK+d5ZfUkyI7KOjqutMe5E7733Xrnuuutk8eLFsmzZMi8OEBrBONxUVexUkWwmCsZUjxLjnbPTNKLVd7hnz75TXZpMnjS+Tra+/g+96aZfypYtW2TPnj0yZswYqa+vF9tLnqREUBpl4OKrISPKc97iOJ0Rx8UZlbZiVSMq5Pbbm9zdd9+tu3fvlv3798v06dOt6xFCpHSV8FTVd55558S/zCrB5LdNo9jlBRfy/fW5sjJJ42K8fPldms/3a2VlpQe88sorpby83AtOD+uw1fuHYITQOqqVFTlJxU23c3v62NoxsurZZ3XlypVSW1vrMXj4888/32+1Uh0jBgYjZhtFU5fysYqjMJAkX6xn3gsuFuMpo2w7bN64QbZt3+4G95vEcey3AolsCeZDW2aAVQ2SwKC5gTGgyxZqCDNRQ2DSH3/88SCTyXixrBJpYNgLzfaTMmtUCU/1MEwnLpfNSCaKJHbO3gkRL9haXxOZkNdefdUDJ7bhERsEgbD3WlpapKurS+jU3r17/UNAAvkwU1XRXDbrXOqqyrLZqk8+/tjt2LFD7SVWXl6ENzc3y0MPPST9/f2ydetWWbVqlcdj9ZwJAU9VGfzWCIPABIdimDVilxccBFqTpolwKticvUCJ7y4EvIBXX321sDVuu+022bVrFyl+u3jH/qgOEJjr7ME5Z5110LUfPKjd3V2OKE1AlKrK8uXLZeHChXLNNdfIY489ZmVf/i8MA3+qiMpngknn4VgyQEtGl9kK+XxeOI5YPmLkf5Wpqn9o227+4ahDNF0Ek+aAzzb7Kqzhcd/hNHVtQRDIiBEjhrYE4Km9ZIBCgoVh6F8eAFTpG54IsQFP1M4w66hqEidaNXKks4fUQrHoVw1MDExV9XMlwcMwBqEGhiRJfZ44aWPGC3YubXPW89MbGnxXEArwcGPP8aZPmjTJ56h+JhggM2er5PoLBdVQu/OFQnfduBPUaly+v98dCZMVnTp1qpWKf2jVAUyAmFRVsV929vVMRAP9THBZlN3Z1d0tc+c1ypiaGu3r6xOKSoLpfkdHh3AccdxBBOBwG6CS9FBfv9VKc6HQ35wbUSkXXnhB2tnZKWCU8MCmATU1NR4TDOMS45dMVbS/UDTBsUSqO5n3Hc5W5LYdOtQrtXUnRLfeeqs70Nbm2LckYK2trXLGGWf4Lx+dAlxVCZk450dVlThJXE9vv6jTV8Mo89q+AwdkybU/d2eeeaaA4RPtD9js4VtuuUXGjx8viB+OaSm2A8QFGriunt4otm0RlmW2Me8FV044frst466W3Xtl0eLF7jfLlvmPBUdZb2+vzJ8/X+677z6prq72Bz7gh3XDwFXoLpYJgw3ZKLOpo6tHsmU5uf/++3TuvHkOLDArKirkzjvvlCVLlnwBD1zVgWbY4A52dpv4dNdU0+gF8wuoccqUfhOx7kBnFz9Q0htuuEFWP/ecPPDAA7JixQp5+OGHhb1LJ3jxSqBDoyGFYSD7DnZEnAqZ8orN5WG4if3Xsrc1mjBhovvrI494rAcffFBWr17tV4uz2UpFdUAgPgZuYHOFYpwe6OhkO62bYhrR6jtMUlmUebSnt0/2d3RpbG913dg6t2DBApk2bZrwVrOMoZ0SgJFfMru3U0HsTU7TvfvsvVBd/+NZ03adP/eHtud0fWtbu508hTSxj5FhOftvmNTV1fltAIaq+m2lOmwU4TyX/e2d2m2a0EYu5n+t4Vw89+xVRv7+zj2tYRAEabFYANTRVeI254HxVT8HzpdIPz3Y4dptC9hn9F5yMPz2zh450N6FAO2zrxt4dJaHJ8c4fYcZB+99A+w+/dC02Pg+2ogN/Vqj1aqa2Jftt/vaO2Xv/rY0m8nYlIoB+7fKCj2wTXrhgyPgmqQu2dayO3Li3rm0ccZfZPDCZ+5di6XOJdYJtQe3/88FQxiDOL7CfGeXNSBSNKAFTTafoJEkvyVQzs1ljTPvseBrb3/QkunL54t8ZlP7n4fNDYkG0O4hNNdpNptx77XsEV6ObBT92mIOcAyfOWLbW/Y6cq3If7otBoY3uO3ezmoncMKNBpt7DU3ESxq9YCaampz3y7OZn/X25eNX3n4vk6RpnIlCTe2LZznOjH8uTe0TIaJlZVm3c88nxW279oTWiT8sbJz5TFOT89sMAnzmslH0x+27dkfkUiMihukxnAxchplaZ0NbrdRzowEthJsMkxHzInGamjSlKxedc/Y7BnppW0eXrH+jOeo61Fsos19gURTa9gjYi1KWjcSWN373w4+SN7bvyNob/Zx14kZwbr9dnAxeJf/S+bOuJ4dcaqgFw7opYRjYD6XQMLMOLjjhRgNa0IQ2GbyCwdEPdIWES+wFzGUyP2rv7ml/+fW3s1u3fRB82tbh7BBP27u60w92t+ra1/8ZNe/4KAo0+NNl82ddAADLbcs4JBifOWLkkEsNtWCABSbYcLxsXHDCjQa0oIn6kn1OMJMkkHhx44znqyuzp6Vp+vsPPmo9sPHNdwIDDNdtbQ7f2LbDdXT2vJLLRldctmDWtQhrsmVjBGO4MVeKkUsNtWCABSbYcMAFJ9xoQMtwLPwvCGaSRArOPfvsTy9fMPumcSNGfzcbRvPS1P00VL2sPJdt+Ml55/zwknkzVyCGLg5fNjCGG7GBHBdQQy0YYIEJNhxwwQk3GoZjlPwjCiZIASQUz5lzZvvC+TPXXnHu7IcWzp/15MVzZ7xLDjHE0EXuj2bkkEsNeWCANYA5cy0cxOCEm5wj2ZcKJhkSigGhkwBi+MSJMX4dK9WAARaGDwcxOI+Gd1TBpUJA6A6AGH4p9u+OYICF4cNxLFjHJPhYgP5bOd8K/qY7/S8AAAD//9s/pPYAAAAGSURBVAMA4gwo0W+HV1EAAAAASUVORK5CYII=" style="width:44px;height:44px;object-fit:contain">
+      <div>
+        <div class="logo-name" style="font-size:22px;font-weight:700;letter-spacing:-0.5px">OCCC</div>
+        <div class="logo-sub" style="font-size:11px;margin-top:2px">One Click Care Check</div>
       </div>
-      <div class="logo-name" style="font-size:15px">One-Click 자동 항목화 시스템</div>
     </div>
 
     <div id="sidebar-single">
@@ -470,26 +474,36 @@
       <button class="btn-run" id="btn-run" onclick="runAnalysis()">
         <i class="ti ti-sparkles"></i> AI 검수 시작
       </button>
+      <div style="height:6px"></div>
       <button class="btn-clear" onclick="clearAll()">초기화</button>
     </div>
 
     <div id="sidebar-batch" style="display:none">
-      <div class="form-group">
-        <label class="form-label">처리 건수</label>
-        <select id="batch-count" style="width:100%;padding:8px 10px;font-size:13px;border:0.5px solid var(--border-light);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary)">
-          <option value="10">10건</option>
-          <option value="20">20건</option>
-          <option value="50">50건</option>
-          <option value="100">100건</option>
-        </select>
+      <div style="background:var(--bg-secondary);border-radius:var(--radius-md);padding:10px 12px;display:flex;flex-direction:column;gap:8px">
+        <div class="section-label" style="margin-bottom:0">진행 현황</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <div style="background:var(--bg-primary);border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:18px;font-weight:700;color:var(--text-primary)" id="stat-total">—</div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:1px">전체</div>
+          </div>
+          <div style="background:var(--bg-primary);border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:18px;font-weight:700;color:var(--green-text)" id="stat-done">—</div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:1px">완료</div>
+          </div>
+          <div style="background:var(--bg-primary);border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:18px;font-weight:700;color:var(--accent)" id="stat-hold">—</div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:1px">자동보류</div>
+          </div>
+          <div style="background:var(--bg-primary);border-radius:8px;padding:8px 10px;text-align:center">
+            <div style="font-size:18px;font-weight:700;color:var(--red-text)" id="stat-error">—</div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:1px">오류</div>
+          </div>
+        </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">시작 행 (0부터)</label>
-        <input type="number" id="batch-offset" value="0" min="0" style="width:100%" />
-      </div>
-      <button class="btn-run" id="btn-batch" onclick="runBatch()">
+      <button class="btn-run" id="btn-batch" onclick="runBatch()" style="margin-top:4px">
         <i class="ti ti-table-import"></i> 일괄 검수 시작
       </button>
+      <div style="height:6px"></div>
       <button class="btn-clear" id="btn-stop" onclick="stopBatch()" style="display:none;background:var(--red-bg);color:var(--red-text);border-color:var(--red-text)">
         <i class="ti ti-player-stop" style="font-size:13px;vertical-align:-2px;margin-right:4px"></i> 중단
       </button>
@@ -498,7 +512,7 @@
       </button>
     </div>
 
-    <div>
+    <div id="history-section">
       <div class="section-label" style="margin-bottom:.6rem">최근 검수 내역</div>
       <div class="history-list" id="history-list">
         <div class="history-empty">아직 검수 내역이 없습니다</div>
@@ -508,33 +522,15 @@
     <div style="margin-top:auto;padding-top:1rem;border-top:0.5px solid var(--border-light)">
       <div class="section-label" style="margin-bottom:.6rem">검수 항목 기준</div>
       <div style="display:flex;flex-direction:column;gap:4px">
-        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px;display:flex;gap:6px;align-items:center">
-          <span style="color:var(--accent);font-weight:600">AI</span> 모델명 / 색상 / 소재
-        </div>
-        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px;display:flex;gap:6px;align-items:center">
-          <span style="color:var(--accent);font-weight:600">AI</span> 사이즈
-        </div>
-        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px;display:flex;gap:6px;align-items:center">
-          <span style="color:var(--accent);font-weight:600">AI</span> 새상품 여부
-        </div>
-        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px;display:flex;gap:6px;align-items:center">
-          <span style="color:var(--accent);font-weight:600">AI</span> 제조 연식 각인 <span style="color:var(--text-muted);font-size:10px">(에·샤·롤)</span>
-        </div>
-        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px;display:flex;gap:6px;align-items:center">
-          <span style="color:var(--accent);font-weight:600">AI</span> 기재 구성품
-        </div>
-        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px;display:flex;gap:6px;align-items:center">
-          <span style="color:var(--accent);font-weight:600">AI</span> 구성품 연식
-        </div>
-        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px;display:flex;gap:6px;align-items:center">
-          <span style="color:var(--accent);font-weight:600">AI</span> 수선 / 각인 여부
-        </div>
-        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px;display:flex;gap:6px;align-items:center">
-          <span style="color:var(--accent);font-weight:600">AI</span> 하자 기재 여부
-        </div>
-        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px;display:flex;gap:6px;align-items:center">
-          <span style="color:var(--accent);font-weight:600">AI</span> 사용감 참고
-        </div>
+        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px">모델명 / 색상 / 소재</div>
+        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px">사이즈</div>
+        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px">새상품 여부</div>
+        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px">제조 연식 각인 <span style="color:var(--text-muted);font-size:10px">(에·샤·롤)</span></div>
+        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px">기재 구성품</div>
+        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px">구성품 연식</div>
+        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px">수선 / 각인 여부</div>
+        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px">하자 기재 여부</div>
+        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px">사용감 참고</div>
       </div>
     </div>
   </aside>
@@ -943,8 +939,9 @@
     document.getElementById('tab-batch').classList.toggle('active', tab === 'batch');
     document.getElementById('tab-single-btn').classList.toggle('active', tab === 'single');
     document.getElementById('tab-batch-btn').classList.toggle('active', tab === 'batch');
-    document.getElementById('sidebar-single').style.display = tab === 'single' ? '' : 'none';
-    document.getElementById('sidebar-batch').style.display  = tab === 'batch'  ? '' : 'none';
+    document.getElementById('sidebar-single').style.display  = tab === 'single' ? '' : 'none';
+    document.getElementById('sidebar-batch').style.display   = tab === 'batch'  ? '' : 'none';
+    document.getElementById('history-section').style.display = tab === 'single' ? '' : 'none';
   }
 
   let csvRows = [];
@@ -1073,14 +1070,18 @@
   async function runBatch() {
     if (!csvRows.length) { alert('먼저 CSV 파일을 업로드해주세요.'); return; }
 
-    const count  = parseInt(document.getElementById('batch-count').value);
-    const offset = parseInt(document.getElementById('batch-offset').value) || 0;
-    const targets = csvRows.slice(offset, offset + count);
-    if (!targets.length) { alert('해당 범위에 데이터가 없습니다.'); return; }
+    const targets = csvRows;
+    if (!targets.length) { alert('데이터가 없습니다.'); return; }
 
     batchRunning = true;
     batchStop = false;
     batchResults = [];
+
+    // 통계 초기화
+    document.getElementById('stat-total').textContent = targets.length;
+    document.getElementById('stat-done').textContent = '0';
+    document.getElementById('stat-hold').textContent = '0';
+    document.getElementById('stat-error').textContent = '0';
 
     document.getElementById('btn-batch').disabled = true;
     document.getElementById('btn-stop').style.display = '';
@@ -1135,6 +1136,14 @@
         parsed = CRITERIA.map(label => ({ label, found: false, details: [] }));
         batchResults.push({ ...row, parsed, raw: '오류: ' + e.message, mismatch, ok: false });
       }
+
+      // 통계 업데이트
+      const doneCount  = batchResults.filter(r => r.ok).length;
+      const errorCount = batchResults.filter(r => !r.ok).length;
+      const holdCount  = batchResults.filter(r => Object.values(r.mismatch || {}).some(f => f.auto)).length;
+      document.getElementById('stat-done').textContent  = doneCount;
+      document.getElementById('stat-error').textContent = errorCount;
+      document.getElementById('stat-hold').textContent  = holdCount;
 
       tr.className = '';
       const cells = parsed.map((item, idx) => {
