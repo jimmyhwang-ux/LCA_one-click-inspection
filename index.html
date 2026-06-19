@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OCCC — One Click Care Check</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pinyon+Script&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -80,10 +83,11 @@
     flex-shrink: 0;
   }
   .logo-name {
-    font-size: 22px; font-weight: 700;
-    letter-spacing: 6px;
+    font-size: 38px; font-weight: 400;
+    letter-spacing: 2px;
     color: var(--text-primary);
-    font-family: Georgia, 'Times New Roman', serif;
+    font-family: 'Pinyon Script', Georgia, cursive;
+    line-height: 1.1;
   }
   .logo-divider {
     display: flex; align-items: center; gap: 10px;
@@ -484,32 +488,36 @@
     border-radius: 50%;
     animation: spin .65s linear infinite;
   }
-  /* 사이드바 기준 툴팁 */
+  /* 사이드바 기준 토글 아코디언 */
   .criteria-item {
-    position: relative;
     font-size: 11px; color: var(--text-secondary);
-    padding: 5px 8px; background: var(--bg-secondary);
-    border-radius: 6px; cursor: default;
+    background: var(--bg-secondary);
+    border-radius: 6px; cursor: pointer;
+    overflow: hidden;
+    transition: background .15s;
   }
   .criteria-item:hover { background: var(--bg-tertiary); }
-  .criteria-tooltip {
-    display: none;
-    position: absolute;
-    left: calc(100% + 8px);
-    top: 0;
-    z-index: 200;
-    width: 220px;
-    background: var(--text-primary);
-    color: #fff;
-    font-size: 11px;
-    line-height: 1.7;
-    padding: 10px 12px;
-    border-radius: var(--radius-md);
-    box-shadow: 0 6px 20px rgba(0,0,0,.18);
-    white-space: normal;
-    pointer-events: none;
+  .criteria-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 5px 8px;
+    gap: 6px;
   }
-  .criteria-item:hover .criteria-tooltip { display: block; }
+  .criteria-header .ci-arrow {
+    font-size: 10px; color: var(--text-muted);
+    transition: transform .2s;
+    flex-shrink: 0;
+  }
+  .criteria-item.open .ci-arrow { transform: rotate(180deg); }
+  .criteria-body {
+    display: none;
+    padding: 0 10px 8px 10px;
+    font-size: 10px;
+    color: var(--text-muted);
+    line-height: 1.7;
+    border-top: 0.5px solid var(--border-light);
+    margin-top: 0;
+  }
+  .criteria-item.open .criteria-body { display: block; }
 
   @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -525,11 +533,6 @@
 <div class="layout">
   <aside class="sidebar">
     <div class="logo">
-      <div class="logo-icon">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M13 2L4.5 13.5H11.5L10.5 22L20 10H13L13 2Z" fill="white"/>
-        </svg>
-      </div>
       <div class="logo-name">OCCC</div>
       <div class="logo-divider"></div>
       <div class="logo-sub">One-Click Care Check</div>
@@ -591,52 +594,61 @@
     <div style="margin-top:auto;padding-top:1rem;border-top:0.5px solid var(--border-light)">
       <div class="section-label" style="margin-bottom:.6rem">검수 항목 기준</div>
       <div style="display:flex;flex-direction:column;gap:4px">
-        <div class="criteria-item">모델명 / 색상 / 소재
-          <div class="criteria-tooltip">브랜드명, 모델명, 색상, 소재 관련 표현 발췌<br>영문+한글 혼합 컬러명(스톰그레이 등) 포함</div>
+        <div class="criteria-item" onclick="toggleCriteria(this)">
+          <div class="criteria-header"><span>모델명 / 색상 / 소재</span><i class="ti ti-chevron-down ci-arrow"></i></div>
+          <div class="criteria-body">브랜드명, 모델명, 색상, 소재 관련 표현 발췌<br>영문+한글 혼합 컬러명(스톰그레이 등) 포함</div>
         </div>
-        <div class="criteria-item">사이즈
-          <div class="criteria-tooltip">사이즈·치수·호수 표현<br>숫자+기호만의 치수(60*24*26 등) 포함<br>MM·GM·PM·TPM·BB·NANO·MINI·SMALL·MEDIUM·LARGE 등 명품 사이즈명 포함</div>
+        <div class="criteria-item" onclick="toggleCriteria(this)">
+          <div class="criteria-header"><span>사이즈</span><i class="ti ti-chevron-down ci-arrow"></i></div>
+          <div class="criteria-body">사이즈·치수·호수 표현<br>숫자+기호만의 치수(60*24*26 등) 포함<br>MM·GM·PM·TPM·BB·NANO·MINI·SMALL·MEDIUM·LARGE 등 명품 사이즈명 포함</div>
         </div>
-        <div class="criteria-item">새상품 여부
-          <div class="criteria-tooltip">새상품·미사용·미착용·선물·데드스톡 표현<br>해당 키워드 있을 때만 착용 횟수 표현 함께 발췌<br>부정 표현(안 신고·못 신고 등)은 발췌 제외<br>"거의 새상품·준새상품" 등 유사 표현은 ❌</div>
+        <div class="criteria-item" onclick="toggleCriteria(this)">
+          <div class="criteria-header"><span>새상품 여부</span><i class="ti ti-chevron-down ci-arrow"></i></div>
+          <div class="criteria-body">새상품·미사용·미착용·선물·데드스톡 표현<br>해당 키워드 있을 때만 착용 횟수 표현 함께 발췌<br>부정 표현(안 신고·못 신고 등)은 발췌 제외<br>"거의 새상품·준새상품" 등 유사 표현은 ❌</div>
         </div>
-        <div class="criteria-item">제조 연식 각인 <span style="color:var(--text-muted);font-size:10px">(에·샤·롤)</span>
-          <div class="criteria-tooltip">에르메스·샤넬·롤렉스에 한해서만 적용<br>시리얼·제조년도·각인·날짜 관련 표현<br>다른 브랜드는 표현 있어도 ❌</div>
+        <div class="criteria-item" onclick="toggleCriteria(this)">
+          <div class="criteria-header"><span>제조 연식 각인 <span style="color:var(--text-muted);font-size:10px">(에·샤·롤)</span></span><i class="ti ti-chevron-down ci-arrow"></i></div>
+          <div class="criteria-body">에르메스·샤넬·롤렉스에 한해서만 적용<br>시리얼·제조년도·각인·날짜 관련 표현<br>다른 브랜드는 표현 있어도 ❌</div>
         </div>
-        <div class="criteria-item">기재 구성품
-          <div class="criteria-tooltip">케이스·박스·보증서·쇼핑백·영수증·인보이스·택 관련 표현<br>"단품", "본품만" 등 구성품 없음 표현은 ❌</div>
+        <div class="criteria-item" onclick="toggleCriteria(this)">
+          <div class="criteria-header"><span>기재 구성품</span><i class="ti ti-chevron-down ci-arrow"></i></div>
+          <div class="criteria-body">케이스·박스·보증서·쇼핑백·영수증·인보이스·택 관련 표현<br>"단품", "본품만" 등 구성품 없음 표현은 ❌</div>
         </div>
-        <div class="criteria-item">구성품 연식
-          <div class="criteria-tooltip">조건 ① 구성품이 기재되어 있고<br>조건 ② 구매 연도/날짜 표현이 있을 때만 발췌<br>스탬핑 날짜(26년6월14일 등) 포함<br>둘 중 하나라도 없으면 ❌</div>
+        <div class="criteria-item" onclick="toggleCriteria(this)">
+          <div class="criteria-header"><span>구성품 연식</span><i class="ti ti-chevron-down ci-arrow"></i></div>
+          <div class="criteria-body">조건 ① 구성품이 기재되어 있고<br>조건 ② 구매 연도/날짜 표현이 있을 때만 발췌<br>스탬핑 날짜(26년6월14일 등) 포함<br>둘 중 하나라도 없으면 ❌</div>
         </div>
-        <div class="criteria-item">수선 / 각인 여부
-          <div class="criteria-tooltip">수선·수리·이니셜·각인·커스텀 관련 표현</div>
+        <div class="criteria-item" onclick="toggleCriteria(this)">
+          <div class="criteria-header"><span>수선 / 각인 여부</span><i class="ti ti-chevron-down ci-arrow"></i></div>
+          <div class="criteria-body">수선·수리·이니셜·각인·커스텀 관련 표현</div>
         </div>
-        <div class="criteria-item">하자 기재 여부
-          <div class="criteria-tooltip">파손·찍힘·깨짐·찢김·변형 등<br>기능/형태에 영향을 주는 물리적 손상만<br>스크래치·변색·얼룩 등 외관 흔적은 ❌ (사용감 참고로)</div>
+        <div class="criteria-item" onclick="toggleCriteria(this)">
+          <div class="criteria-header"><span>하자 기재 여부</span><i class="ti ti-chevron-down ci-arrow"></i></div>
+          <div class="criteria-body">파손·찍힘·깨짐·찢김·변형 등<br>기능/형태에 영향을 주는 물리적 손상만<br>스크래치·변색·얼룩 등 외관 흔적은 ❌ (사용감 참고로)</div>
         </div>
-        <div class="criteria-item">사용감 참고
-          <div class="criteria-tooltip">① 스크래치·마모·보풀·변색·얼룩 등 외관 사용 흔적<br>② 제품 소재·가공·디자인 특성 설명<br>(원래 디스트레스드 가공, 밑창이 원래 노란빛 등)</div>
+        <div class="criteria-item" onclick="toggleCriteria(this)">
+          <div class="criteria-header"><span>사용감 참고</span><i class="ti ti-chevron-down ci-arrow"></i></div>
+          <div class="criteria-body">① 스크래치·마모·보풀·변색·얼룩 등 외관 사용 흔적<br>② 제품 소재·가공·디자인 특성 설명<br>(원래 디스트레스드 가공, 밑창이 원래 노란빛 등)</div>
         </div>
       </div>
 
       <div class="section-label" style="margin-top:1rem;margin-bottom:.6rem">선판정 기준</div>
       <div style="display:flex;flex-direction:column;gap:4px">
-        <div class="criteria-item">
-          <span style="color:var(--red-text);font-weight:600;margin-right:4px">⚠</span>구성품 모호 표현 기재
-          <div class="criteria-tooltip">풀구성·풀박스·풀세트·풀셋·구성 동일·구성 그대로 등<br>→ 자동 보류 처리</div>
+        <div class="criteria-item" onclick="toggleCriteria(this)">
+          <div class="criteria-header"><span><span style="color:var(--red-text);font-weight:600;margin-right:4px">⚠</span>구성품 모호 표현 기재</span><i class="ti ti-chevron-down ci-arrow"></i></div>
+          <div class="criteria-body">풀구성·풀박스·풀세트·풀셋·구성 동일·구성 그대로 등<br>→ 자동 보류 처리</div>
         </div>
-        <div class="criteria-item">
-          <span style="color:var(--red-text);font-weight:600;margin-right:4px">⚠</span>사이즈 속성 vs 본문 불일치
-          <div class="criteria-tooltip">속성값 사이즈와 본문 발췌 사이즈가 다를 때<br>속성값이 "기타(상품설명에 작성)" 계열이면 비교 제외<br>→ 자동 보류 처리</div>
+        <div class="criteria-item" onclick="toggleCriteria(this)">
+          <div class="criteria-header"><span><span style="color:var(--red-text);font-weight:600;margin-right:4px">⚠</span>사이즈 속성 vs 본문 불일치</span><i class="ti ti-chevron-down ci-arrow"></i></div>
+          <div class="criteria-body">속성값 사이즈와 본문 발췌 사이즈가 다를 때<br>속성값이 "기타(상품설명에 작성)" 계열이면 비교 제외<br>→ 자동 보류 처리</div>
         </div>
-        <div class="criteria-item">
-          <span style="color:var(--red-text);font-weight:600;margin-right:4px">⚠</span>의류·신발·모자 사이즈 미기재
-          <div class="criteria-tooltip">의류·신발·모자 카테고리에서<br>속성 기타 계열이고 본문 사이즈도 없을 때<br>→ 자동 보류 처리</div>
+        <div class="criteria-item" onclick="toggleCriteria(this)">
+          <div class="criteria-header"><span><span style="color:var(--red-text);font-weight:600;margin-right:4px">⚠</span>의류·신발·모자 사이즈 미기재</span><i class="ti ti-chevron-down ci-arrow"></i></div>
+          <div class="criteria-body">의류·신발·모자 카테고리에서<br>속성 기타 계열이고 본문 사이즈도 없을 때<br>→ 자동 보류 처리</div>
         </div>
-        <div class="criteria-item">
-          <span style="color:#D9822B;font-weight:600;margin-right:4px">ℹ</span>새상품·미사용 기재 — 실물 확인
-          <div class="criteria-tooltip">새상품·미사용·미착용 키워드가 본문 또는 속성에 있을 때<br>부정 표현(안 신고·못 신고 등) 있으면 알림 억제<br>→ 검수자가 실물 보고 판단</div>
+        <div class="criteria-item" onclick="toggleCriteria(this)">
+          <div class="criteria-header"><span><span style="color:#D9822B;font-weight:600;margin-right:4px">ℹ</span>새상품·미사용 기재 — 실물 확인</span><i class="ti ti-chevron-down ci-arrow"></i></div>
+          <div class="criteria-body">새상품·미사용·미착용 키워드가 본문 또는 속성에 있을 때<br>부정 표현(안 신고·못 신고 등) 있으면 알림 억제<br>→ 검수자가 실물 보고 판단</div>
         </div>
       </div>
     </div>
@@ -1385,6 +1397,10 @@
 
   function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+  function toggleCriteria(el) {
+    el.classList.toggle('open');
+  }
+
   /* ── 선판정 로직 ──────────────────────────────────────────
      AI가 자동 판정하는 케이스 (검수결과/상세사유 자동 기입):
        1. 모델명/색상/소재 — 본문 내 중복 기재 + 서로 다름
@@ -1415,41 +1431,34 @@
   }
 
   function checkAttrMismatch(row, parsed) {
-    // flags: { idx: { auto: bool, result: string, reason: string, warn: string } }
-    // auto=true  → CSV에 검수결과/상세사유 자동 기입
-    // auto=false → 알림만, 검수자가 템플릿 선택
     const flags = {};
 
-    /* ── 2. 기재 구성품: 모호한 표현 ── */
-    const compItem = parsed[IDX_COMP];
-    if (compItem.found) {
-      const compText = (compItem.details || []).join(' ');
-      const vagueKeywords = ['풀구성', '풀박스', '구매 당시 그대로', '구매당시그대로', '풀세트', '풀셋', '전부 있', '전부있', '다 있', '다있', '등', '구성 동일', '구성이 동일', '동일한 구성', '구성과 동일', '구성그대로', '구성 그대로'];
-      const hasVague = vagueKeywords.some(kw => compText.includes(kw));
-      if (hasVague) {
-        flags[IDX_COMP] = {
-          auto: true,
-          result: '보류',
-          reason: '구성품 확인 필요 > 구성품이 상품 설명과 같은지 확인 후 구매를 결정해 주세요.',
-          warn: '구성품 모호 표현 기재 (풀구성/풀박스 등)'
-        };
-      }
+    // 본문 원문 + AI 발췌 통합 — 모든 선판정은 여기서 검색
+    const rawBody    = (row.body  || '').trim();
+    const rawTitle   = (row.title || '').trim();
+    const statusAttr = (row.statusAttr || '').trim();
+    const fullRaw    = rawBody + ' ' + rawTitle + ' ' + statusAttr;
+    const parsedText = idx => (parsed[idx].details || []).join(' ');
+    const textFor    = idx => parsedText(idx) + ' ' + fullRaw;
+
+    /* ── 2. 기재 구성품: 모호한 표현 — AI 발췌 여부 무관, 본문 원문 직접 검색 ── */
+    const vagueKeywords = ['풀구성', '풀박스', '구매 당시 그대로', '구매당시그대로', '풀세트', '풀셋', '전부 있', '전부있', '다 있', '다있', '구성 동일', '구성이 동일', '동일한 구성', '구성과 동일', '구성그대로', '구성 그대로'];
+    if (vagueKeywords.some(kw => textFor(IDX_COMP).includes(kw))) {
+      flags[IDX_COMP] = {
+        auto: true,
+        result: '보류',
+        reason: '구성품 확인 필요 > 구성품이 상품 설명과 같은지 확인 후 구매를 결정해 주세요.',
+        warn: '구성품 모호 표현 기재 (풀구성/풀박스 등)'
+      };
     }
 
-    /* ── 3. 새상품 여부: 본문 또는 속성 중 하나라도 기재 → 알림만 ── */
-    const newItem = parsed[IDX_NEW];
-    const statusAttr = (row.statusAttr || '').trim();
-    const newInAttr = statusAttr.includes('새상품') || statusAttr.includes('미사용') || statusAttr.includes('미착용');
-    const newInBody = newItem.found;
-
-    // JS 후처리: 새상품 키워드가 본문/속성 어디에도 없으면 억제
-    const newKeywords = ['새상품', '미사용', '미착용', '선물', '데드스톡', '새제품', '미개봉'];
-    const fullText = (row.body || '') + ' ' + (row.title || '') + ' ' + statusAttr;
-    const hasNewKeyword = newKeywords.some(kw => fullText.includes(kw));
-
-    // JS 후처리: 부정 표현이 포함된 경우 억제
+    /* ── 3. 새상품 여부: 본문 원문 직접 검색 + 부정 표현 억제 ── */
+    const newKeywords      = ['새상품', '미사용', '미착용', '선물', '데드스톡', '새제품', '미개봉'];
     const negativePatterns = ['안 신고', '안신고', '못 신고', '못신고', '거의 안', '별로 안', '안 쓰고', '안쓰고', '안 입고', '안입고'];
-    const hasNegative = negativePatterns.some(p => fullText.includes(p));
+    const hasNewKeyword = newKeywords.some(kw => fullRaw.includes(kw));
+    const hasNegative   = negativePatterns.some(p => fullRaw.includes(p));
+    const newInAttr     = statusAttr.includes('새상품') || statusAttr.includes('미사용') || statusAttr.includes('미착용');
+    const newInBody     = parsed[IDX_NEW].found || newKeywords.some(kw => rawBody.includes(kw));
 
     if ((newInAttr || newInBody) && hasNewKeyword && !hasNegative) {
       flags[IDX_NEW] = {
@@ -1460,31 +1469,29 @@
       };
     }
 
-    /* ── 4. 사이즈: 두 가지 조건 중 하나라도 해당하면 ── */
-    const sizeItem = parsed[IDX_SIZE];
-    const sizeAttr = (row.sizeAttr || '').trim();
+    /* ── 4. 사이즈: 속성값 vs AI발췌+본문 원문 ── */
+    const sizeItem     = parsed[IDX_SIZE];
+    const sizeAttr     = (row.sizeAttr || '').trim();
+    const sizeBodyText = parsedText(IDX_SIZE) + ' ' + rawBody + ' ' + rawTitle;
     let sizeFlag = false;
 
-    // 4-① 속성값 vs 본문 발췌 다름 (기타 계열 속성값은 비교 대상 아님)
+    // 4-① 속성값 vs 본문 (기타 계열 제외)
     if (sizeAttr && !sizeAttr.startsWith('기타')) {
       const attrNums = extractSizeNums(sizeAttr);
-      const bodyText = (sizeItem.details || []).join(' ');
-      const bodyNums = extractSizeNums(bodyText);
+      const bodyNums = extractSizeNums(sizeBodyText);
       if (attrNums.length > 0 && bodyNums.length > 0) {
-        const mismatch = attrNums.some(n => !bodyNums.includes(n));
-        if (mismatch) sizeFlag = true;
-      } else if (attrNums.length > 0 && !sizeItem.found) {
+        if (attrNums.some(n => !bodyNums.includes(n))) sizeFlag = true;
+      } else if (attrNums.length > 0 && extractSizeNums(rawBody + ' ' + rawTitle).length === 0) {
         sizeFlag = true;
       }
     }
 
-    // 4-② 제목 vs 본문 내용 다르게 기재
-    if (!sizeFlag && sizeItem.found && (sizeItem.details || []).length >= 2) {
-      const titleNums = extractSizeNums(row.title || '');
+    // 4-② 제목 vs 본문 사이즈 상이
+    if (!sizeFlag && (sizeItem.details || []).length >= 2) {
+      const titleNums   = extractSizeNums(rawTitle);
       const bodyAllNums = sizeItem.details.flatMap(d => extractSizeNums(d));
-      if (titleNums.length > 0 && bodyAllNums.length > 0) {
-        const conflict = titleNums.some(n => !bodyAllNums.includes(n));
-        if (conflict) sizeFlag = true;
+      if (titleNums.length > 0 && bodyAllNums.length > 0 && titleNums.some(n => !bodyAllNums.includes(n))) {
+        sizeFlag = true;
       }
     }
 
@@ -1499,19 +1506,17 @@
 
     /* ── 5·6. 의류/신발/모자 전용 사이즈 체크 ── */
     if (!flags[IDX_SIZE] && isClothingCategory(row.category)) {
-      // 5. 속성 기타 계열 + 본문 사이즈 미기재
-      if (sizeAttr.startsWith('기타') && !sizeItem.found) {
+      const hasSizeInBody = sizeItem.found || extractSizeNums(rawBody + ' ' + rawTitle).length > 0;
+      if (sizeAttr.startsWith('기타') && !hasSizeInBody) {
         flags[IDX_SIZE] = {
           auto: true,
           result: '보류',
           reason: '기타 > 입고된 상품의 사이즈를 확인해 주세요.',
           warn: '의류/신발/모자 — 속성 기타 + 본문 사이즈 미기재'
         };
-      }
-      // 6. 속성 vs 본문 사이즈 다름 (기타 계열 속성값은 비교 제외)
-      else if (sizeAttr && !sizeAttr.startsWith('기타') && sizeItem.found) {
+      } else if (sizeAttr && !sizeAttr.startsWith('기타') && hasSizeInBody) {
         const attrNums = extractSizeNums(sizeAttr);
-        const bodyNums = extractSizeNums((sizeItem.details || []).join(' '));
+        const bodyNums = extractSizeNums(sizeBodyText);
         if (attrNums.length > 0 && bodyNums.length > 0 && attrNums.some(n => !bodyNums.includes(n))) {
           flags[IDX_SIZE] = {
             auto: true,
