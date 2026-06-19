@@ -1447,8 +1447,7 @@
     if (matchedVague) {
       // 모호 표현이 감지됐는데 AI가 구성품 발췌를 못 했으면 → 본문에서 해당 문장 직접 찾아서 강제 주입
       if (!parsed[IDX_COMP].found) {
-        const sentences = fullRaw.split(/[.。
-]/).map(s => s.trim()).filter(s => s.includes(matchedVague));
+        const sentences = fullRaw.replace(/\n/g, ".").split(".").map(s => s.trim()).filter(s => s.includes(matchedVague));
         if (sentences.length > 0) {
           parsed[IDX_COMP].found = true;
           parsed[IDX_COMP].details = sentences;
