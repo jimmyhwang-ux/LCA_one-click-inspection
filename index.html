@@ -1371,7 +1371,7 @@
     const compItem = parsed[IDX_COMP];
     if (compItem.found) {
       const compText = (compItem.details || []).join(' ');
-      const vagueKeywords = ['풀구성', '풀박스', '구매 당시 그대로', '구매당시그대로', '풀세트', '풀셋', '전부 있', '전부있', '다 있', '다있', '등'];
+      const vagueKeywords = ['풀구성', '풀박스', '구매 당시 그대로', '구매당시그대로', '풀세트', '풀셋', '전부 있', '전부있', '다 있', '다있', '등', '구성 동일', '구성이 동일', '동일한 구성', '구성과 동일', '구성그대로', '구성 그대로'];
       const hasVague = vagueKeywords.some(kw => compText.includes(kw));
       if (hasVague) {
         flags[IDX_COMP] = {
