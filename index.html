@@ -185,6 +185,14 @@
   .s-done    { background: var(--green-bg);      color: var(--green-text); }
   .s-error   { background: var(--red-bg);        color: var(--red-text); }
 
+  .single-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    align-items: start;
+  }
+  @media (max-width: 900px) { .single-layout { grid-template-columns: 1fr; } }
+
   .result-card {
     background: var(--bg-primary);
     border: none;
@@ -193,6 +201,76 @@
     padding: 1.5rem;
     min-height: 420px;
   }
+
+  .judge-card {
+    background: var(--bg-primary);
+    box-shadow: var(--shadow-card);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    min-height: 420px;
+  }
+  .judge-card-title {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 13px; font-weight: 600; color: var(--text-primary);
+    padding: 10px 14px; background: var(--bg-secondary);
+    border-radius: var(--radius-md); margin-bottom: 10px;
+  }
+  .judge-empty {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    min-height: 340px; gap: 10px;
+    color: var(--text-muted); text-align: center;
+  }
+  .judge-empty i { font-size: 36px; opacity: .35; }
+  .judge-empty p { font-size: 13px; line-height: 1.7; }
+  .judge-list { display: flex; flex-direction: column; gap: 8px; }
+  .judge-item { border: 0.5px solid var(--border-light); border-radius: var(--radius-md); overflow: hidden; }
+  .judge-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px; background: var(--bg-secondary);
+  }
+  .judge-name { font-size: 12px; font-weight: 500; color: var(--text-primary); }
+  .judge-toggle { display: flex; gap: 4px; }
+  .jbtn {
+    font-size: 11px; padding: 3px 10px;
+    border: 0.5px solid var(--border-mid); border-radius: 20px;
+    background: transparent; color: var(--text-secondary); cursor: pointer; transition: all .12s;
+  }
+  .jbtn:hover { background: var(--bg-tertiary); }
+  .jbtn.active-pass { background: var(--green-bg); color: var(--green-text); border-color: var(--green-text); }
+  .jbtn.active-hold { background: var(--red-bg); color: var(--red-text); border-color: var(--red-text); }
+  .judge-body { display: none; padding: 8px 12px; border-top: 0.5px solid var(--border-light); }
+  .judge-body.open { display: block; }
+  .judge-tmpl-row {
+    padding: 7px 0;
+    border-bottom: 0.5px solid var(--border-light);
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .judge-tmpl-row:last-child { border-bottom: none; }
+  .judge-tmpl-label { font-size: 11px; font-weight: 500; color: var(--text-secondary); }
+  .judge-tmpl-value {
+    font-size: 12px; color: var(--text-primary); line-height: 1.5;
+    background: var(--bg-secondary); border-radius: var(--radius-md);
+    padding: 6px 9px;
+  }
+  .judge-select {
+    width: 100%; font-size: 12px; padding: 6px 8px;
+    border: 0.5px solid var(--border-mid); border-radius: var(--radius-md);
+    background: var(--bg-secondary); color: var(--text-primary); margin-bottom: 8px;
+  }
+  .judge-preview {
+    font-size: 12px; color: var(--text-secondary);
+    background: var(--bg-secondary); border-radius: var(--radius-md);
+    padding: 8px 10px; line-height: 1.6; margin-bottom: 8px; min-height: 36px;
+  }
+  .btn-copy-tmpl {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; padding: 4px 10px;
+    border: 0.5px solid var(--border-mid); border-radius: var(--radius-md);
+    background: transparent; color: var(--text-secondary); cursor: pointer; transition: all .12s;
+  }
+  .btn-copy-tmpl:hover { background: var(--bg-secondary); }
+  .btn-copy-tmpl.copied { color: var(--green-text); border-color: var(--green-text); }
 
   .result-empty {
     display: flex; flex-direction: column;
@@ -355,6 +433,26 @@
   .mismatch-text { font-size: 11px; color: var(--red-text); margin-top: 3px; font-weight: 600; line-height: 1.5; }
   .row-pending td { opacity: .4; }
   .row-running td { background: var(--blue-bg) !important; }
+  .batch-tmpl-btn {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 10px; padding: 3px 7px;
+    border: 0.5px solid var(--border-mid); border-radius: var(--radius-md);
+    background: transparent; color: var(--text-secondary); cursor: pointer;
+    transition: all .12s; white-space: nowrap;
+  }
+  .batch-tmpl-btn:hover { background: var(--bg-tertiary); }
+  .batch-tmpl-btn.copied { color: var(--green-text); border-color: var(--green-text); }
+  .tmpl-dd {
+    position: absolute; left: 0; top: calc(100% + 4px); z-index: 99;
+    background: var(--bg-primary); border: 0.5px solid var(--border-mid);
+    border-radius: var(--radius-md); box-shadow: 0 4px 16px rgba(0,0,0,.1);
+    min-width: 220px; overflow: hidden;
+  }
+  .tmpl-dd-item {
+    padding: 8px 12px; font-size: 12px; color: var(--text-primary);
+    cursor: pointer; transition: background .1s;
+  }
+  .tmpl-dd-item:hover { background: var(--bg-secondary); }
 
   .batch-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .batch-stat { font-size: 12px; color: var(--text-secondary); margin-left: auto; }
@@ -455,16 +553,28 @@
       <div class="page-header">
         <div>
           <div class="page-title">검수 결과</div>
-          <div class="page-sub">항목별 자동 추출 및 상태 표시</div>
+          <div class="page-sub">항목별 자동 추출 및 판정</div>
         </div>
         <span class="status-badge s-idle" id="status-badge">대기 중</span>
       </div>
-      <div class="result-card" id="result-card">
-        <div class="result-empty" id="result-empty">
-          <i class="ti ti-file-search"></i>
-          <p>상품명과 본문을 입력하고<br>AI 검수 시작 버튼을 눌러주세요</p>
+      <div class="single-layout">
+        <div class="result-card" id="result-card">
+          <div class="result-empty" id="result-empty">
+            <i class="ti ti-file-search"></i>
+            <p>상품명과 본문을 입력하고<br>AI 검수 시작 버튼을 눌러주세요</p>
+          </div>
+          <div id="result-content" style="display:none"></div>
         </div>
-        <div id="result-content" style="display:none"></div>
+        <div class="judge-card" id="judge-card">
+          <div class="judge-card-title">
+            <i class="ti ti-gavel"></i> 판정
+          </div>
+          <div class="judge-empty" id="judge-empty">
+            <i class="ti ti-clipboard-list"></i>
+            <p>AI 추출 완료 후<br>항목별 판정을 진행하세요</p>
+          </div>
+          <div id="judge-content" style="display:none"></div>
+        </div>
       </div>
     </div>
 
@@ -553,6 +663,8 @@
     document.getElementById('result-empty').innerHTML =
       '<i class="ti ti-file-search"></i><p>상품명과 본문을 입력하고<br>AI 검수 시작 버튼을 눌러주세요</p>';
     document.getElementById('result-content').style.display = 'none';
+    document.getElementById('judge-empty').style.display = 'flex';
+    document.getElementById('judge-content').style.display = 'none';
     setStatus('s-idle', '대기 중');
     setMetrics(null, null, null);
   }
@@ -611,6 +723,88 @@
       </div>
       <ul class="result-list">${itemsHtml}</ul>
     `;
+
+    renderJudgePanel(items);
+  }
+
+  const HOLD_TEMPLATES = {
+    "모델명 / 색상 / 소재": [
+      { label: "모델명·색상·소재 불일치", value: "보류 > 본문 상품정보와 불일치 > 해당 템플릿 체크" },
+      { label: "모호하거나 확인 불가", value: "보류 > 기타 > 입고된 상품의 [텍스트]를 확인해주세요." }
+    ],
+    "사이즈": [
+      { label: "사이즈 불일치", value: "보류 > 사이즈 정보 불일치(누락) > 상품 설명에 기재된 상품 사이즈 : [텍스트], 실제 도착한 상품 사이즈 : [텍스트]" },
+      { label: "속성 기타 + 본문 미기재", value: "보류 > 기타 > 입고된 상품의 사이즈를 확인해주세요." }
+    ],
+    "새상품 여부": [
+      { label: "육안 사용흔 있음", value: "보류 > 본문 상품정보와 불일치 > 새상품 불일치" },
+      { label: "변색/얼룩 (사용흔 없음)", value: "보류 > 기타 > 보관 시 발생한 [텍스트]를 확인해주세요." },
+      { label: "수선 확인 필요", value: "보류 > 수선 확인 > 해당 템플릿 체크" },
+      { label: "기능 결함 있음", value: "보류 > 기능 결함 > 해당 템플릿 체크" }
+    ],
+    "제조 연식 각인": [
+      { label: "구매 연도 불일치", value: "보류 > 본문 상품 정보와 불일치 > 상품 설명에 기재된 상품 구매시기: [텍스트], 실제 도착한 상품 구매시기 : [텍스트]" },
+      { label: "연식 각인 불일치", value: "보류 > 본문 상품 정보와 불일치 > 상품 설명에 기재된 상품 제조 연식 각인 : [텍스트], 실제 도착한 상품 제조 연식 각인 : [텍스트]" },
+      { label: "각인 모호 (에르메스)", value: "보류 > 기타 > 입고된 상품의 [텍스트]을/를 확인해주세요." }
+    ],
+    "기재 구성품": [
+      { label: "구성품 표기 모호 (풀구성 등)", value: "보류 > 도착한 구성품 확인 필요 > 구성품이 상품 설명과 같은지 확인 후 구매를 결정해주세요." },
+      { label: "기재 구성품과 모델 불일치", value: "보류 > 본문 구성품과 상이 > 구성품에 기재된 정보와 입고된 상품의 정보가 상이합니다." }
+    ],
+    "수선 / 각인 여부": [
+      { label: "수선/커스텀 확인 필요", value: "보류 > 수선/커스텀 확인 > 해당 템플릿 체크" },
+      { label: "검수 판별 불가", value: "불합격 > 검수 판별 불가능 > 일부 마감이 상이하여 번개케어 검수 기준 적용이 불가합니다." }
+    ],
+    "하자 기재 여부": [
+      { label: "기능 결함", value: "보류 > 기능 결함 > 해당 템플릿 체크" },
+      { label: "부속품 누락", value: "보류 > 제품 부속품 누락 > 해당 템플릿 체크" },
+      { label: "빈티지 개체 확인 불가", value: "보류 > 도착한 구성품 확인 필요 > 현재 입고된 부속품 외 추가적인 부속품 확인이 불가합니다." }
+    ]
+  };
+
+  function renderJudgePanel(items) {
+    document.getElementById('judge-empty').style.display = 'none';
+    const jc = document.getElementById('judge-content');
+    jc.style.display = 'block';
+
+    const judgeItems = items
+      .filter(item => item.found && HOLD_TEMPLATES[item.label])
+      .map(item => {
+        const tmpls = (HOLD_TEMPLATES[item.label] || [])
+          .map((t, ti) => {
+            const uid = 'jt_' + encodeURIComponent(item.label) + '_' + ti;
+            return `
+              <div class="judge-tmpl-row" id="${uid}-row">
+                <div class="judge-tmpl-label">${escHtml(t.label)}</div>
+                <div class="judge-tmpl-value">${escHtml(t.value)}</div>
+                <button class="btn-copy-tmpl" onclick="judgeCopyDirect('${uid}', ${JSON.stringify(t.value)}, this)">
+                  <i class="ti ti-clipboard" aria-hidden="true"></i> 복사
+                </button>
+              </div>`;
+          }).join('');
+        return `
+          <div class="judge-item">
+            <div class="judge-header">
+              <span class="judge-name">${escHtml(item.label)} 🔵</span>
+            </div>
+            <div class="judge-body open">${tmpls}</div>
+          </div>`;
+      }).join('');
+
+    jc.innerHTML = judgeItems
+      ? `<div class="judge-list">${judgeItems}</div>`
+      : `<div class="judge-empty"><i class="ti ti-circle-check"></i><p>보류 템플릿 대상 항목이<br>없습니다</p></div>`;
+  }
+
+  function judgeCopyDirect(uid, text, btn) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.classList.add('copied');
+      btn.innerHTML = '<i class="ti ti-check" aria-hidden="true"></i> 복사됨';
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.innerHTML = '<i class="ti ti-clipboard" aria-hidden="true"></i> 복사';
+      }, 1800);
+    });
   }
 
   function parseResponse(text) {
@@ -947,7 +1141,23 @@
             detailHtml = `<div class="detail-text">${escHtml(detail)}</div>`;
           }
         }
-        return `<td class="${cellClass}"><span class="icon-dot">${icon}</span>${detailHtml}${warnHtml}</td>`;
+        const tmplOpts = HOLD_TEMPLATES[item.label];
+        let tmplHtml = '';
+        if (item.found && tmplOpts && tmplOpts.length) {
+          const btnId = 'tb_' + idx + '_' + i;
+          const ddId  = 'td_' + idx + '_' + i;
+          const optHtml = tmplOpts.map(t =>
+            `<div class="tmpl-dd-item" onclick="batchCopyTmpl('${btnId}','${ddId}',${JSON.stringify(t.value)})">${escHtml(t.label)}</div>`
+          ).join('');
+          tmplHtml = `
+            <div class="tmpl-dd-wrap" id="${ddId}" style="position:relative;display:inline-block;margin-top:4px">
+              <button class="batch-tmpl-btn" id="${btnId}" onclick="toggleTmplDd('${ddId}')">
+                <i class="ti ti-clipboard" aria-hidden="true"></i> 보류
+              </button>
+              <div class="tmpl-dd" style="display:none">${optHtml}</div>
+            </div>`;
+        }
+        return `<td class="${cellClass}"><span class="icon-dot">${icon}</span>${detailHtml}${warnHtml}${tmplHtml}</td>`;
       });
       tr.innerHTML = `
         <td class="care-no">${escHtml(row.careNo)}</td>
@@ -976,6 +1186,34 @@
   }
 
   function stopBatch() { batchStop = true; }
+
+  function toggleTmplDd(ddId) {
+    const dd = document.getElementById(ddId);
+    const menu = dd ? dd.querySelector('.tmpl-dd') : null;
+    if (!menu) return;
+    const isOpen = menu.style.display !== 'none';
+    document.querySelectorAll('.tmpl-dd').forEach(d => d.style.display = 'none');
+    menu.style.display = isOpen ? 'none' : 'block';
+  }
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.tmpl-dd-wrap')) {
+      document.querySelectorAll('.tmpl-dd').forEach(d => d.style.display = 'none');
+    }
+  });
+
+  function batchCopyTmpl(btnId, ddId, text) {
+    document.getElementById(ddId).querySelector('.tmpl-dd').style.display = 'none';
+    const btn = document.getElementById(btnId);
+    navigator.clipboard.writeText(text).then(() => {
+      btn.classList.add('copied');
+      btn.innerHTML = '<i class="ti ti-check" aria-hidden="true"></i> 복사됨';
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.innerHTML = '<i class="ti ti-clipboard" aria-hidden="true"></i> 보류';
+      }, 1800);
+    });
+  }
 
   function setBatchStatus(cls, text) {
     const b = document.getElementById('batch-status-badge');
