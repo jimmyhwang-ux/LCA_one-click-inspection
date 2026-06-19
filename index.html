@@ -241,36 +241,11 @@
   .jbtn.active-hold { background: var(--red-bg); color: var(--red-text); border-color: var(--red-text); }
   .judge-body { display: none; padding: 8px 12px; border-top: 0.5px solid var(--border-light); }
   .judge-body.open { display: block; }
-  .judge-tmpl-row {
-    padding: 7px 0;
-    border-bottom: 0.5px solid var(--border-light);
-    display: flex; flex-direction: column; gap: 3px;
-  }
-  .judge-tmpl-row:last-child { border-bottom: none; }
-  .judge-tmpl-label { font-size: 11px; font-weight: 500; color: var(--text-secondary); }
-  .judge-tmpl-value {
-    font-size: 12px; color: var(--text-primary); line-height: 1.5;
-    background: var(--bg-secondary); border-radius: var(--radius-md);
-    padding: 6px 9px;
-  }
   .judge-select {
     width: 100%; font-size: 12px; padding: 6px 8px;
     border: 0.5px solid var(--border-mid); border-radius: var(--radius-md);
     background: var(--bg-secondary); color: var(--text-primary); margin-bottom: 8px;
   }
-  .judge-preview {
-    font-size: 12px; color: var(--text-secondary);
-    background: var(--bg-secondary); border-radius: var(--radius-md);
-    padding: 8px 10px; line-height: 1.6; margin-bottom: 8px; min-height: 36px;
-  }
-  .btn-copy-tmpl {
-    display: inline-flex; align-items: center; gap: 4px;
-    font-size: 11px; padding: 4px 10px;
-    border: 0.5px solid var(--border-mid); border-radius: var(--radius-md);
-    background: transparent; color: var(--text-secondary); cursor: pointer; transition: all .12s;
-  }
-  .btn-copy-tmpl:hover { background: var(--bg-secondary); }
-  .btn-copy-tmpl.copied { color: var(--green-text); border-color: var(--green-text); }
 
   .result-empty {
     display: flex; flex-direction: column;
@@ -770,25 +745,24 @@
 
     const judgeItems = items
       .filter(item => item.found && HOLD_TEMPLATES[item.label])
-      .map(item => {
-        const tmpls = (HOLD_TEMPLATES[item.label] || [])
-          .map((t, ti) => {
-            const uid = 'jt_' + encodeURIComponent(item.label) + '_' + ti;
-            return `
-              <div class="judge-tmpl-row" id="${uid}-row">
-                <div class="judge-tmpl-label">${escHtml(t.label)}</div>
-                <div class="judge-tmpl-value">${escHtml(t.value)}</div>
-                <button class="btn-copy-tmpl" onclick="judgeCopyDirect('${uid}', ${JSON.stringify(t.value)}, this)">
-                  <i class="ti ti-clipboard" aria-hidden="true"></i> 복사
-                </button>
-              </div>`;
-          }).join('');
+      .map((item, i) => {
+        const tmpls = HOLD_TEMPLATES[item.label] || [];
+        const btnId = 'jbtn_' + i;
+        const ddId  = 'jdd_' + i;
+        const optHtml = tmpls.map(t =>
+          `<div class="tmpl-dd-item" onclick="judgeCopyTmpl('${btnId}','${ddId}',${JSON.stringify(t.value)})">${escHtml(t.label)}</div>`
+        ).join('');
         return `
           <div class="judge-item">
             <div class="judge-header">
               <span class="judge-name">${escHtml(item.label)} 🔵</span>
+              <div class="tmpl-dd-wrap" id="${ddId}" style="position:relative;display:inline-block">
+                <button class="batch-tmpl-btn" id="${btnId}" onclick="toggleTmplDd('${ddId}')">
+                  <i class="ti ti-clipboard" aria-hidden="true"></i> 보류
+                </button>
+                <div class="tmpl-dd" style="display:none">${optHtml}</div>
+              </div>
             </div>
-            <div class="judge-body open">${tmpls}</div>
           </div>`;
       }).join('');
 
@@ -797,13 +771,15 @@
       : `<div class="judge-empty"><i class="ti ti-circle-check"></i><p>보류 템플릿 대상 항목이<br>없습니다</p></div>`;
   }
 
-  function judgeCopyDirect(uid, text, btn) {
+  function judgeCopyTmpl(btnId, ddId, text) {
+    document.getElementById(ddId).querySelector('.tmpl-dd').style.display = 'none';
+    const btn = document.getElementById(btnId);
     navigator.clipboard.writeText(text).then(() => {
       btn.classList.add('copied');
       btn.innerHTML = '<i class="ti ti-check" aria-hidden="true"></i> 복사됨';
       setTimeout(() => {
         btn.classList.remove('copied');
-        btn.innerHTML = '<i class="ti ti-clipboard" aria-hidden="true"></i> 복사';
+        btn.innerHTML = '<i class="ti ti-clipboard" aria-hidden="true"></i> 보류';
       }, 1800);
     });
   }
@@ -820,7 +796,7 @@
       '사용감': 7
     };
 
-    const result = CRITERIA.map(label => ({ label, found: false, details: [], mismatch: false }));
+    const result = CRITERIA.map(label => ({ label, found: false, details: [] }));
     const seen = new Set();
     const lines = text.split('\n');
     let lastIdx = -1;
@@ -837,7 +813,6 @@
           if (t.includes(key) && !seen.has(idx)) {
             seen.add(idx);
             result[idx].found = hasBlue;
-            result[idx].mismatch = hasBlue && t.includes('[상이]');
             lastIdx = idx;
             break;
           }
@@ -1260,17 +1235,6 @@
     // auto=true  → CSV에 검수결과/상세사유 자동 기입
     // auto=false → 알림만, 검수자가 템플릿 선택
     const flags = {};
-
-    /* ── 1. 모델명/색상/소재: AI가 [상이] 태그 표시한 경우 ── */
-    const modelItem = parsed[IDX_MODEL];
-    if (modelItem.mismatch) {
-      flags[IDX_MODEL] = {
-        auto: true,
-        result: '보류',
-        reason: '기타 > 입고된 상품의 모델명/색상/소재를 확인해 주세요.',
-        warn: '본문 내 모델명/색상/소재 중복 기재 — 내용 상이'
-      };
-    }
 
     /* ── 2. 기재 구성품: 모호한 표현 ── */
     const compItem = parsed[IDX_COMP];
