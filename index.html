@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>명품 검수 어드민</title>
+<title>OCCC — One Click Care Check</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -65,19 +65,42 @@
 
   .logo {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     padding-bottom: 1.25rem;
     border-bottom: 0.5px solid var(--border-light);
+    text-align: center;
   }
   .logo-icon {
-    width: 44px; height: 44px;
+    width: 48px; height: 48px;
+    background: var(--text-primary);
+    border-radius: 12px;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
   }
-  .logo-icon svg { width: 18px; height: 21px; }
-  .logo-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
-  .logo-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+  .logo-name {
+    font-size: 22px; font-weight: 700;
+    letter-spacing: 6px;
+    color: var(--text-primary);
+    font-family: Georgia, 'Times New Roman', serif;
+  }
+  .logo-divider {
+    display: flex; align-items: center; gap: 10px;
+    width: 60%;
+  }
+  .logo-divider::before, .logo-divider::after {
+    content: ''; flex: 1;
+    height: 1px; background: var(--accent);
+  }
+  .logo-sub {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    margin-top: 0;
+  }
 
   .form-group { display: flex; flex-direction: column; gap: 5px; }
   .form-label { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
@@ -460,10 +483,14 @@
 <div class="layout">
   <aside class="sidebar">
     <div class="logo">
-      <div>
-        <div class="logo-name" style="font-size:22px;font-weight:700;letter-spacing:-0.5px">OCCC</div>
-        <div class="logo-sub" style="font-size:11px;margin-top:2px">One Click Care Check</div>
+      <div class="logo-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M13 2L4.5 13.5H11.5L10.5 22L20 10H13L13 2Z" fill="white"/>
+        </svg>
       </div>
+      <div class="logo-name">OCCC</div>
+      <div class="logo-divider"></div>
+      <div class="logo-sub">One-Click Care Check</div>
     </div>
 
     <div id="sidebar-single">
@@ -538,18 +565,18 @@
   <main class="main" style="padding:0;gap:0">
     <div class="tab-bar">
       <button class="tab-btn active" id="tab-single-btn" onclick="switchTab('single')">
-        <i class="ti ti-file-text" style="font-size:14px;vertical-align:-2px;margin-right:5px"></i>단건 검수
+        <i class="ti ti-file-text" style="font-size:14px;vertical-align:-2px;margin-right:5px"></i>개별 검수
       </button>
       <button class="tab-btn" id="tab-batch-btn" onclick="switchTab('batch')">
-        <i class="ti ti-table" style="font-size:14px;vertical-align:-2px;margin-right:5px"></i>대량 검수
+        <i class="ti ti-table" style="font-size:14px;vertical-align:-2px;margin-right:5px"></i>일괄 검수
       </button>
     </div>
 
     <div class="tab-panel active" id="tab-single">
       <div class="page-header">
         <div>
-          <div class="page-title">검수 결과</div>
-          <div class="page-sub">항목별 자동 추출 및 판정</div>
+          <div class="page-title">개별 검수</div>
+          <div class="page-sub">상품명과 본문을 붙여넣고 AI 검수 시작을 누르세요. 9개 항목을 자동 발췌하고 선판정합니다.</div>
         </div>
         <span class="status-badge s-idle" id="status-badge">대기 중</span>
       </div>
@@ -577,8 +604,8 @@
     <div class="tab-panel" id="tab-batch">
       <div class="page-header">
         <div>
-          <div class="page-title">대량 검수</div>
-          <div class="page-sub">케어번호 · 상품명 · 본문내용 자동 추출</div>
+          <div class="page-title">일괄 검수</div>
+          <div class="page-sub">케어번호·상품명·본문이 포함된 CSV / 엑셀을 업로드하세요. 전체 건을 순차 처리하고 결과를 CSV로 저장합니다.</div>
         </div>
         <span class="status-badge s-idle" id="batch-status-badge">대기 중</span>
       </div>
