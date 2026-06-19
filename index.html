@@ -559,6 +559,23 @@
         <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px">하자 기재 여부</div>
         <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px">사용감 참고</div>
       </div>
+
+      <div class="section-label" style="margin-top:1rem;margin-bottom:.6rem">선판정 기준</div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px">
+          <span style="color:var(--red-text);font-weight:600;margin-right:4px">⚠</span>구성품 모호 표현 기재
+          <div style="font-size:10px;color:var(--text-muted);margin-top:2px">풀구성·풀박스·풀세트·풀셋 등</div>
+        </div>
+        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px">
+          <span style="color:var(--red-text);font-weight:600;margin-right:4px">⚠</span>사이즈 속성 vs 본문 불일치
+        </div>
+        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px">
+          <span style="color:var(--red-text);font-weight:600;margin-right:4px">⚠</span>의류·신발·모자 사이즈 미기재
+        </div>
+        <div style="font-size:11px;color:var(--text-secondary);padding:5px 8px;background:var(--bg-secondary);border-radius:6px">
+          <span style="color:#D9822B;font-weight:600;margin-right:4px">ℹ</span>새상품·미사용 기재 — 실물 확인
+        </div>
+      </div>
     </div>
   </aside>
 
@@ -576,7 +593,7 @@
       <div class="page-header">
         <div>
           <div class="page-title">개별 검수</div>
-          <div class="page-sub">상품명과 본문을 붙여넣고 AI 검수 시작을 누르세요. 9개 항목을 자동 발췌하고 선판정합니다.</div>
+          <div class="page-sub">본문내용을 붙여넣고 AI 검수 시작을 누르세요. 9개 항목을 추출하여 결과를 보여드립니다.</div>
         </div>
         <span class="status-badge s-idle" id="status-badge">대기 중</span>
       </div>
@@ -605,7 +622,7 @@
       <div class="page-header">
         <div>
           <div class="page-title">일괄 검수</div>
-          <div class="page-sub">케어번호·상품명·본문이 포함된 CSV / 엑셀을 업로드하세요. 전체 건을 순차 처리하고 결과를 CSV로 저장합니다.</div>
+          <div class="page-sub">상품명, 본문내용, 속성값이 포함된 CSV / 엑셀을 업로드해주세요. 전체 건을 빠르게 순차 처리하여 결과를 CSV로 저장합니다.</div>
         </div>
         <span class="status-badge s-idle" id="batch-status-badge">대기 중</span>
       </div>
