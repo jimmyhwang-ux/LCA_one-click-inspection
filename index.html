@@ -519,6 +519,51 @@
   }
   .criteria-item.open .criteria-body { display: block; }
 
+  /* 로그인 화면 */
+  .login-screen {
+    display: none;
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--bg-tertiary);
+    align-items: center; justify-content: center;
+  }
+  .login-screen.active { display: flex; }
+  .login-box {
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    padding: 2.5rem 2rem;
+    width: 320px;
+    display: flex; flex-direction: column; align-items: center; gap: 1.25rem;
+  }
+  .login-logo {
+    font-family: 'Pinyon Script', Georgia, cursive;
+    font-size: 52px; color: var(--text-primary);
+    line-height: 1; letter-spacing: 2px;
+  }
+  .login-sub {
+    font-size: 10px; font-weight: 600; letter-spacing: 4px;
+    color: var(--text-secondary); text-transform: uppercase;
+    margin-top: -10px;
+  }
+  .login-divider { width: 60%; height: 0.5px; background: var(--accent); opacity: 0.5; }
+  .login-box input[type="password"] {
+    width: 100%; padding: 10px 12px; font-size: 13px;
+    background: var(--bg-secondary); border: none;
+    border-radius: var(--radius-md); color: var(--text-primary);
+    outline: none; text-align: center; letter-spacing: 4px;
+  }
+  .login-box input[type="password"]:focus {
+    box-shadow: 0 0 0 3px rgba(217,130,43,0.15);
+  }
+  .login-box input[type="password"]::placeholder { letter-spacing: 1px; }
+  .login-error {
+    font-size: 12px; color: var(--red-text);
+    background: var(--red-bg); border-radius: 6px;
+    padding: 6px 12px; width: 100%; text-align: center;
+    display: none;
+  }
+  .login-error.show { display: block; }
+
   @keyframes spin { to { transform: rotate(360deg); } }
 
   @media (max-width: 768px) {
@@ -529,6 +574,26 @@
 </style>
 </head>
 <body>
+
+<!-- 로그인 화면 -->
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">OCCC</div>
+    <div class="login-sub">One · Click · Care · Check</div>
+    <div class="login-divider"></div>
+    <div style="font-size:12px;color:var(--text-secondary);text-align:center;line-height:1.7">
+      접속 비밀번호를 입력해주세요
+    </div>
+    <input type="password" id="login-pw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn-run" onclick="doLogin()" style="width:100%">
+      <i class="ti ti-lock-open"></i> 접속
+    </button>
+    <div class="login-error" id="login-error"></div>
+    <div style="font-size:10px;color:var(--text-muted);margin-top:-.5rem">
+      접속 상태는 24시간 유지됩니다
+    </div>
+  </div>
+</div>
 
 <div class="layout">
   <aside class="sidebar">
@@ -653,8 +718,10 @@
       </div>
     </div>
   <div style="padding: 0.75rem 1.25rem; border-top: 0.5px solid var(--border-light); display:flex; align-items:center; justify-content:space-between;">
-    <span style="font-size:10px; color:var(--text-muted); letter-spacing:0.05em;">v1.0.6 · 2026-06-19</span>
-    <span style="font-size:10px; color:var(--text-muted);">OCCC</span>
+    <span style="font-size:10px; color:var(--text-muted); letter-spacing:0.05em;">v1.0.7 · 2026-06-19</span>
+    <button onclick="doLogout()" style="font-size:10px;color:var(--text-muted);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:3px;padding:2px 4px;border-radius:4px;transition:color .15s;" onmouseover="this.style.color='var(--red-text)'" onmouseout="this.style.color='var(--text-muted)'">
+      <i class="ti ti-logout" style="font-size:12px"></i> 로그아웃
+    </button>
   </div>
   </aside>
 
@@ -989,12 +1056,21 @@
 
   /* ── 서버리스 함수 호출 (API 키는 서버에만 존재, 클라이언트에 노출 안 됨) ── */
   async function callAPI(title, content) {
+    const token = localStorage.getItem('occc_token') || '';
     const res = await fetch('/api/analyze', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-occc-token': token
+      },
       body: JSON.stringify({ title, content })
     });
     const data = await res.json().catch(() => ({}));
+    if (res.status === 401) {
+      // 토큰 만료 → 로그인 화면으로
+      logout();
+      throw new Error('세션이 만료됐습니다. 다시 로그인해주세요.');
+    }
     if (!res.ok) {
       throw new Error(data.error?.message || `HTTP ${res.status}`);
     }
@@ -1298,19 +1374,19 @@
         const tmplOpts = HOLD_TEMPLATES[item.label];
         let tmplHtml = '';
         if (item.found && tmplOpts && tmplOpts.length) {
-          const btnId = 'tb_' + idx + '_' + i;
-          const ddId  = 'td_' + idx + '_' + i;
-          const optHtml = tmplOpts.map((t, ti) => {
+          // 개별검수와 동일하게 — 각 템플릿을 바로 나열하고 복사 버튼
+          const rows = tmplOpts.map((t, ti) => {
             const dataId = `bdata_${idx}_${i}_${ti}`;
-            return `<div class="tmpl-dd-item" id="${dataId}" data-value="${escHtml(t.value)}" onclick="batchCopyTmpl('${btnId}','${ddId}',document.getElementById('${dataId}').dataset.value)">${escHtml(t.label)}</div>`;
+            const btnId  = `bbtn_${idx}_${i}_${ti}`;
+            return `
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:5px 8px;background:var(--bg-secondary);border-radius:var(--radius-md);margin-top:4px">
+                <span id="${dataId}" data-value="${escHtml(t.value)}" style="font-size:10px;color:var(--text-secondary);line-height:1.5;flex:1">${escHtml(t.value)}</span>
+                <button id="${btnId}" onclick="batchTmplCopyDirect('${btnId}','${dataId}')" style="flex-shrink:0;display:inline-flex;align-items:center;gap:2px;font-size:10px;padding:2px 7px;border:0.5px solid var(--border-mid);border-radius:var(--radius-md);background:transparent;color:var(--text-secondary);cursor:pointer;white-space:nowrap">
+                  <i class="ti ti-clipboard" aria-hidden="true"></i> 복사
+                </button>
+              </div>`;
           }).join('');
-          tmplHtml = `
-            <div class="tmpl-dd-wrap" id="${ddId}" style="position:relative;display:inline-block;margin-top:4px">
-              <button class="batch-tmpl-btn" id="${btnId}" onclick="toggleTmplDd('${ddId}')">
-                <i class="ti ti-clipboard" aria-hidden="true"></i> 보류
-              </button>
-              <div class="tmpl-dd" style="display:none">${optHtml}</div>
-            </div>`;
+          tmplHtml = `<div style="margin-top:4px">${rows}</div>`;
         }
         return `<td class="${cellClass}">${icon}${detailHtml}${warnHtml}${tmplHtml}</td>`;
       });
@@ -1399,7 +1475,84 @@
     document.querySelectorAll('.row-chk').forEach(chk => chk.checked = masterChk.checked);
   }
 
+  /* ── 인증 ────────────────────────────────────────── */
+  function getToken() { return localStorage.getItem('occc_token') || ''; }
+
+  function logout() {
+    localStorage.removeItem('occc_token');
+    document.getElementById('login-screen').classList.add('active');
+    document.getElementById('login-pw').value = '';
+    document.getElementById('login-error').classList.remove('show');
+  }
+
+  async function doLogin() {
+    const pw  = document.getElementById('login-pw').value.trim();
+    const err = document.getElementById('login-error');
+    const btn = document.querySelector('#login-screen .btn-run');
+    if (!pw) return;
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> 확인 중...';
+    err.classList.remove('show');
+
+    try {
+      const res  = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        err.textContent = data.error?.message || '비밀번호가 올바르지 않습니다.';
+        err.classList.add('show');
+        document.getElementById('login-pw').value = '';
+        document.getElementById('login-pw').focus();
+        return;
+      }
+      localStorage.setItem('occc_token', data.token);
+      document.getElementById('login-screen').classList.remove('active');
+    } catch (e) {
+      err.textContent = '서버 연결 오류가 발생했습니다.';
+      err.classList.add('show');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-lock-open"></i> 접속';
+    }
+  }
+
+  // 사이드바 로그아웃 버튼용
+  function doLogout() {
+    if (confirm('로그아웃 하시겠습니까?')) logout();
+  }
+
+  // 페이지 로드 시 토큰 확인
+  (function initAuth() {
+    const token = getToken();
+    if (!token) { logout(); return; }
+    // 토큰 만료 여부 클라이언트에서 선검사
+    try {
+      const payload = JSON.parse(atob(token.split('.')[0].replace(/-/g,'+').replace(/_/g,'/')));
+      if (!payload.exp || Date.now() > payload.exp) { logout(); return; }
+    } catch { logout(); }
+  })();
+  /* ───────────────────────────────────────────────── */
+
   function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  function batchTmplCopyDirect(btnId, dataId) {
+    const text = document.getElementById(dataId).dataset.value;
+    const btn  = document.getElementById(btnId);
+    navigator.clipboard.writeText(text).then(() => {
+      btn.innerHTML = '<i class="ti ti-check" aria-hidden="true"></i> 복사됨';
+      btn.style.color = 'var(--green-text)';
+      btn.style.borderColor = 'var(--green-text)';
+      setTimeout(() => {
+        btn.innerHTML = '<i class="ti ti-clipboard" aria-hidden="true"></i> 복사';
+        btn.style.color = '';
+        btn.style.borderColor = '';
+      }, 1800);
+    });
+  }
 
   function toggleCriteria(el) {
     el.classList.toggle('open');
