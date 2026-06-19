@@ -818,23 +818,23 @@
       .filter(item => item.found && HOLD_TEMPLATES[item.label])
       .map((item, i) => {
         const tmpls = HOLD_TEMPLATES[item.label] || [];
-        const btnId = 'jbtn_' + i;
-        const ddId  = 'jdd_' + i;
-        const optHtml = tmpls.map((t, ti) => {
+        const tmplRows = tmpls.map((t, ti) => {
           const dataId = `jdata_${i}_${ti}`;
-          return `<div class="tmpl-dd-item" id="${dataId}" data-value="${escHtml(t.value)}" onclick="judgeCopyTmpl('${btnId}','${ddId}',document.getElementById('${dataId}').dataset.value)">${escHtml(t.label)}</div>`;
+          const btnId  = `jbtn_${i}_${ti}`;
+          return `
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;background:var(--bg-secondary);border-radius:var(--radius-md);margin-top:6px">
+              <span id="${dataId}" data-value="${escHtml(t.value)}" style="font-size:11px;color:var(--text-secondary);line-height:1.5;flex:1">${escHtml(t.value)}</span>
+              <button id="${btnId}" onclick="judgeCopyDirect('${btnId}','${dataId}')" style="flex-shrink:0;display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:3px 8px;border:0.5px solid var(--border-mid);border-radius:var(--radius-md);background:transparent;color:var(--text-secondary);cursor:pointer;white-space:nowrap">
+                <i class="ti ti-clipboard" aria-hidden="true"></i> 복사
+              </button>
+            </div>`;
         }).join('');
         return `
           <div class="judge-item">
             <div class="judge-header">
               <span class="judge-name">${escHtml(item.label)} 🔵</span>
-              <div class="tmpl-dd-wrap" id="${ddId}" style="position:relative;display:inline-block">
-                <button class="batch-tmpl-btn" id="${btnId}" onclick="toggleTmplDd('${ddId}')">
-                  <i class="ti ti-clipboard" aria-hidden="true"></i> 보류
-                </button>
-                <div class="tmpl-dd" style="display:none">${optHtml}</div>
-              </div>
             </div>
+            <div style="padding:4px 8px 8px">${tmplRows}</div>
           </div>`;
       }).join('');
 
@@ -843,15 +843,15 @@
       : `<div class="judge-empty"><i class="ti ti-circle-check"></i><p>보류 템플릿 대상 항목이<br>없습니다</p></div>`;
   }
 
-  function judgeCopyTmpl(btnId, ddId, text) {
-    document.getElementById(ddId).querySelector('.tmpl-dd').style.display = 'none';
-    const btn = document.getElementById(btnId);
+  function judgeCopyDirect(btnId, dataId) {
+    const text = document.getElementById(dataId).dataset.value;
+    const btn  = document.getElementById(btnId);
     navigator.clipboard.writeText(text).then(() => {
       btn.classList.add('copied');
       btn.innerHTML = '<i class="ti ti-check" aria-hidden="true"></i> 복사됨';
       setTimeout(() => {
         btn.classList.remove('copied');
-        btn.innerHTML = '<i class="ti ti-clipboard" aria-hidden="true"></i> 보류';
+        btn.innerHTML = '<i class="ti ti-clipboard" aria-hidden="true"></i> 복사';
       }, 1800);
     });
   }
