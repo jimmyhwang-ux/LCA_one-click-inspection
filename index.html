@@ -961,8 +961,8 @@
       if (!raw) throw new Error('AI 응답이 비어있습니다');
 
       const parsed = parseResponse(raw);
-      // 개별 검수용 선판정 (속성값 없이 본문만으로 가능한 항목)
-      const mismatch = checkAttrMismatch({ sizeAttr: '', statusAttr: '', category: '', title: '' }, parsed);
+      // 개별 검수용 선판정 (본문 텍스트 포함해서 새상품 후처리 작동)
+      const mismatch = checkAttrMismatch({ sizeAttr: '', statusAttr: '', category: '', title: '', body: content }, parsed);
       const pass   = parsed.filter(i => i.found).length;
 
       const now  = new Date();
@@ -1355,8 +1355,8 @@
   function extractSizeNums(text) {
     const t = (text || '').toUpperCase();
     const nums = t.match(/\b\d{2,3}(\.\d)?\b/g) || [];
-    const letters = t.match(/\b(XXXL|XXL|XL|XS|FREE|ONE\s*SIZE|ONESIZE|GM|MM|TPM|BB|PM|NANO|PETITE|JUMBO|MAXI|MICRO|COMPACT|LONG|POCHETTE|MINI|SMALL|MEDIUM|LARGE|TEEN|TOY|REGULAR)\b/g) || [];
-    const korean = (text || '').match(/미니|스몰|라지|미디움|미듐|맥시|나노|점보|마이크로|컴팩트|포쉐트|롱|틴|토이|레귤러/g) || [];
+    const letters = t.match(/\b(XXXL|XXL|XL|XS|FREE|ONE\s*SIZE|ONESIZE|GM|MM|TPM|BB|PM|NANO|PETITE|JUMBO|MAXI|MICRO|COMPACT|LONG|MINI|SMALL|MEDIUM|LARGE|TEEN|TOY|REGULAR)\b/g) || [];
+    const korean = (text || '').match(/미니|스몰|라지|미디움|미듐|맥시|나노|점보|마이크로|컴팩트|롱|틴|토이|레귤러/g) || [];
     const sml = t.match(/(?<![A-Z])\b(S|M|L)\b(?![A-Z])/g) || [];
     return [...nums, ...letters.map(s => s.replace(/\s/g, '')), ...korean, ...sml];
   }
@@ -1388,7 +1388,17 @@
     const statusAttr = (row.statusAttr || '').trim();
     const newInAttr = statusAttr.includes('새상품') || statusAttr.includes('미사용') || statusAttr.includes('미착용');
     const newInBody = newItem.found;
-    if (newInAttr || newInBody) {
+
+    // JS 후처리: 새상품 키워드가 본문/속성 어디에도 없으면 억제
+    const newKeywords = ['새상품', '미사용', '미착용', '선물', '데드스톡', '새제품', '미개봉'];
+    const fullText = (row.body || '') + ' ' + (row.title || '') + ' ' + statusAttr;
+    const hasNewKeyword = newKeywords.some(kw => fullText.includes(kw));
+
+    // JS 후처리: 부정 표현이 포함된 경우 억제
+    const negativePatterns = ['안 신고', '안신고', '못 신고', '못신고', '거의 안', '별로 안', '안 쓰고', '안쓰고', '안 입고', '안입고'];
+    const hasNegative = negativePatterns.some(p => fullText.includes(p));
+
+    if ((newInAttr || newInBody) && hasNewKeyword && !hasNegative) {
       flags[IDX_NEW] = {
         auto: false,
         result: '',
@@ -1402,8 +1412,8 @@
     const sizeAttr = (row.sizeAttr || '').trim();
     let sizeFlag = false;
 
-    // 4-① 속성값 vs 본문 발췌 다름
-    if (sizeAttr && sizeAttr !== '기타') {
+    // 4-① 속성값 vs 본문 발췌 다름 (기타 계열 속성값은 비교 대상 아님)
+    if (sizeAttr && !sizeAttr.startsWith('기타')) {
       const attrNums = extractSizeNums(sizeAttr);
       const bodyText = (sizeItem.details || []).join(' ');
       const bodyNums = extractSizeNums(bodyText);
@@ -1436,8 +1446,8 @@
 
     /* ── 5·6. 의류/신발/모자 전용 사이즈 체크 ── */
     if (!flags[IDX_SIZE] && isClothingCategory(row.category)) {
-      // 5. 속성 기타 + 본문 사이즈 미기재
-      if (sizeAttr === '기타' && !sizeItem.found) {
+      // 5. 속성 기타 계열 + 본문 사이즈 미기재
+      if (sizeAttr.startsWith('기타') && !sizeItem.found) {
         flags[IDX_SIZE] = {
           auto: true,
           result: '보류',
@@ -1445,8 +1455,8 @@
           warn: '의류/신발/모자 — 속성 기타 + 본문 사이즈 미기재'
         };
       }
-      // 6. 속성 vs 본문 사이즈 다름 (4-①과 동일 로직, 기타 포함)
-      else if (sizeAttr && sizeItem.found) {
+      // 6. 속성 vs 본문 사이즈 다름 (기타 계열 속성값은 비교 제외)
+      else if (sizeAttr && !sizeAttr.startsWith('기타') && sizeItem.found) {
         const attrNums = extractSizeNums(sizeAttr);
         const bodyNums = extractSizeNums((sizeItem.details || []).join(' '));
         if (attrNums.length > 0 && bodyNums.length > 0 && attrNums.some(n => !bodyNums.includes(n))) {
