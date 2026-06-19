@@ -820,9 +820,10 @@
         const tmpls = HOLD_TEMPLATES[item.label] || [];
         const btnId = 'jbtn_' + i;
         const ddId  = 'jdd_' + i;
-        const optHtml = tmpls.map(t =>
-          `<div class="tmpl-dd-item" onclick="judgeCopyTmpl('${btnId}','${ddId}',${JSON.stringify(t.value)})">${escHtml(t.label)}</div>`
-        ).join('');
+        const optHtml = tmpls.map((t, ti) => {
+          const dataId = `jdata_${i}_${ti}`;
+          return `<div class="tmpl-dd-item" id="${dataId}" data-value="${escHtml(t.value)}" onclick="judgeCopyTmpl('${btnId}','${ddId}',document.getElementById('${dataId}').dataset.value)">${escHtml(t.label)}</div>`;
+        }).join('');
         return `
           <div class="judge-item">
             <div class="judge-header">
@@ -1211,9 +1212,10 @@
         if (item.found && tmplOpts && tmplOpts.length) {
           const btnId = 'tb_' + idx + '_' + i;
           const ddId  = 'td_' + idx + '_' + i;
-          const optHtml = tmplOpts.map(t =>
-            `<div class="tmpl-dd-item" onclick="batchCopyTmpl('${btnId}','${ddId}',${JSON.stringify(t.value)})">${escHtml(t.label)}</div>`
-          ).join('');
+          const optHtml = tmplOpts.map((t, ti) => {
+            const dataId = `bdata_${idx}_${i}_${ti}`;
+            return `<div class="tmpl-dd-item" id="${dataId}" data-value="${escHtml(t.value)}" onclick="batchCopyTmpl('${btnId}','${ddId}',document.getElementById('${dataId}').dataset.value)">${escHtml(t.label)}</div>`;
+          }).join('');
           tmplHtml = `
             <div class="tmpl-dd-wrap" id="${ddId}" style="position:relative;display:inline-block;margin-top:4px">
               <button class="batch-tmpl-btn" id="${btnId}" onclick="toggleTmplDd('${ddId}')">
