@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>명품 검수 어드민</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -418,7 +419,7 @@
         <i class="ti ti-file-text" style="font-size:14px;vertical-align:-2px;margin-right:5px"></i>단건 검수
       </button>
       <button class="tab-btn" id="tab-batch-btn" onclick="switchTab('batch')">
-        <i class="ti ti-table" style="font-size:14px;vertical-align:-2px;margin-right:5px"></i>CSV 일괄처리
+        <i class="ti ti-table" style="font-size:14px;vertical-align:-2px;margin-right:5px"></i>대량 검수
       </button>
     </div>
 
@@ -442,7 +443,7 @@
     <div class="tab-panel" id="tab-batch">
       <div class="page-header">
         <div>
-          <div class="page-title">CSV 일괄처리</div>
+          <div class="page-title">대량 검수</div>
           <div class="page-sub">케어번호 · 상품명 · 본문내용 자동 추출</div>
         </div>
         <span class="status-badge s-idle" id="batch-status-badge">대기 중</span>
@@ -451,10 +452,10 @@
       <div id="upload-area">
         <div class="upload-zone" onclick="document.getElementById('csv-input').click()" id="drop-zone">
           <i class="ti ti-file-spreadsheet"></i>
-          <p>CSV 파일을 클릭하거나 드래그하여 업로드</p>
-          <span>케어번호, 상품명, 본문내용 포함된 파일</span>
+          <p>CSV 또는 엑셀 파일을 클릭하거나 드래그하여 업로드</p>
+          <span>케어번호, 상품명, 본문내용 포함된 파일 (.csv, .xlsx, .xls)</span>
         </div>
-        <input type="file" id="csv-input" accept=".csv" style="display:none" onchange="loadCSV(this)">
+        <input type="file" id="csv-input" accept=".csv,.xlsx,.xls" style="display:none" onchange="loadCSV(this)">
         <div id="csv-info" style="display:none;font-size:12px;color:var(--text-secondary);padding:8px 4px"></div>
       </div>
 
@@ -717,38 +718,45 @@
   let batchStop = false;
   let batchResults = [];
 
-  function parseCSV(text) {
-    const lines = text.split('\n');
-    if (!lines.length) return [];
-    const header = lines[0];
-    const delim = header.includes('\t') ? '\t' : ',';
-    const headers = splitCSVLine(header, delim);
-    const careIdx  = headers.findIndex(h => h.replace(/"/g,'').trim() === '케어번호');
-    const brandIdx = headers.findIndex(h => h.replace(/"/g,'').trim() === '브랜드');
-    const catIdx   = headers.findIndex(h => h.replace(/"/g,'').trim() === '카테고리');
-    const titleIdx = headers.findIndex(h => h.replace(/"/g,'').trim() === '상품명');
-    const bodyIdx  = headers.findIndex(h => h.replace(/"/g,'').trim() === '본문내용');
-    const sizeAttrIdx   = headers.findIndex(h => h.replace(/"/g,'').trim() === '상품사이즈(현재)');
-    const statusAttrIdx = headers.findIndex(h => h.replace(/"/g,'').trim() === '상품상태(현재)');
+  /* CSV 텍스트 → 2차원 배열(행렬) */
+  function csvTextToMatrix(text) {
+    const lines = text.split('\n').filter(l => l.length > 0 || l.trim() !== '');
+    const delim = (lines[0] || '').includes('\t') ? '\t' : ',';
+    return lines.map(line => splitCSVLine(line.trim(), delim)).filter(r => r.length > 0);
+  }
+
+  /* 2차원 배열(헤더 + 행들) → rows 객체 배열. CSV/엑셀 공통 매핑 로직 */
+  function matrixToRows(matrix) {
+    if (!matrix.length) return [];
+    const headers = matrix[0].map(h => String(h ?? '').replace(/"/g,'').trim());
+    const careIdx  = headers.findIndex(h => h === '케어번호');
+    const brandIdx = headers.findIndex(h => h === '브랜드');
+    const catIdx   = headers.findIndex(h => h === '카테고리');
+    const titleIdx = headers.findIndex(h => h === '상품명');
+    const bodyIdx  = headers.findIndex(h => h === '본문내용');
+    const sizeAttrIdx   = headers.findIndex(h => h === '상품사이즈(현재)');
+    const statusAttrIdx = headers.findIndex(h => h === '상품상태(현재)');
 
     const rows = [];
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (!line) continue;
-      const cols = splitCSVLine(line, delim);
-      const body = cols[bodyIdx] || '';
+    for (let i = 1; i < matrix.length; i++) {
+      const cols = matrix[i].map(c => String(c ?? ''));
+      const body = (cols[bodyIdx] || '').trim();
       if (!body || body.length < 20) continue;
       rows.push({
-        careNo : cols[careIdx]  || '',
-        brand  : cols[brandIdx] || '',
-        category: cols[catIdx]  || '',
-        title  : cols[titleIdx] || '',
+        careNo : (cols[careIdx]  || '').trim(),
+        brand  : (cols[brandIdx] || '').trim(),
+        category: (cols[catIdx]  || '').trim(),
+        title  : (cols[titleIdx] || '').trim(),
         body   : body,
         sizeAttr  : (sizeAttrIdx   >= 0 ? cols[sizeAttrIdx]   : '') || '',
         statusAttr: (statusAttrIdx >= 0 ? cols[statusAttrIdx] : '') || ''
       });
     }
     return rows;
+  }
+
+  function parseCSV(text) {
+    return matrixToRows(csvTextToMatrix(text));
   }
 
   function splitCSVLine(line, delim) {
@@ -767,16 +775,51 @@
   function loadCSV(input) {
     const file = input.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-      csvRows = parseCSV(e.target.result);
-      const info = document.getElementById('csv-info');
-      info.style.display = 'block';
-      info.innerHTML = `<i class="ti ti-check" style="color:var(--green-text);font-size:14px;vertical-align:-2px;margin-right:4px"></i>` +
-        `<strong>${file.name}</strong> — 본문 있는 행 <strong>${csvRows.length.toLocaleString()}건</strong> 로드 완료`;
-      document.getElementById('drop-zone').style.borderColor = 'var(--green-text)';
-    };
-    reader.readAsText(file, 'utf-8');
+    const name = file.name.toLowerCase();
+    const isExcel = name.endsWith('.xlsx') || name.endsWith('.xls');
+
+    if (isExcel) {
+      if (typeof XLSX === 'undefined') {
+        showCsvError('엑셀 파싱 라이브러리를 불러오지 못했어요. 네트워크 연결을 확인해주세요.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const wb = XLSX.read(e.target.result, { type: 'array' });
+          const sheet = wb.Sheets[wb.SheetNames[0]];
+          const matrix = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: '' });
+          csvRows = matrixToRows(matrix);
+          showCsvLoaded(file.name, csvRows.length);
+        } catch (err) {
+          showCsvError('엑셀 파일을 읽는 중 오류가 발생했어요: ' + err.message);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    } else {
+      const reader = new FileReader();
+      reader.onload = e => {
+        csvRows = parseCSV(e.target.result);
+        showCsvLoaded(file.name, csvRows.length);
+      };
+      reader.readAsText(file, 'utf-8');
+    }
+  }
+
+  function showCsvLoaded(fileName, rowCount) {
+    const info = document.getElementById('csv-info');
+    info.style.display = 'block';
+    info.innerHTML = `<i class="ti ti-check" style="color:var(--green-text);font-size:14px;vertical-align:-2px;margin-right:4px"></i>` +
+      `<strong>${escHtml(fileName)}</strong> — 본문 있는 행 <strong>${rowCount.toLocaleString()}건</strong> 로드 완료`;
+    document.getElementById('drop-zone').style.borderColor = 'var(--green-text)';
+  }
+
+  function showCsvError(msg) {
+    const info = document.getElementById('csv-info');
+    info.style.display = 'block';
+    info.innerHTML = `<i class="ti ti-alert-triangle" style="color:var(--red-text);font-size:14px;vertical-align:-2px;margin-right:4px"></i>` +
+      `<span style="color:var(--red-text)">${escHtml(msg)}</span>`;
+    document.getElementById('drop-zone').style.borderColor = 'var(--red-text)';
   }
 
   const dropZone = document.getElementById('drop-zone');
@@ -786,7 +829,8 @@
     e.preventDefault();
     dropZone.style.borderColor = '';
     const file = e.dataTransfer.files[0];
-    if (file && file.name.endsWith('.csv')) {
+    const name = file ? file.name.toLowerCase() : '';
+    if (file && (name.endsWith('.csv') || name.endsWith('.xlsx') || name.endsWith('.xls'))) {
       const fakeInput = { files: [file] };
       loadCSV(fakeInput);
     }
