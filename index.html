@@ -1445,6 +1445,16 @@
     const vagueKeywords = ['풀구성', '풀박스', '구매 당시 그대로', '구매당시그대로', '풀세트', '풀셋', '전부 있', '전부있', '다 있', '다있', '구성 동일', '구성이 동일', '동일한 구성', '구성과 동일', '구성그대로', '구성 그대로'];
     const matchedVague = vagueKeywords.find(kw => textFor(IDX_COMP).includes(kw));
     if (matchedVague) {
+      // 모호 표현이 감지됐는데 AI가 구성품 발췌를 못 했으면 → 본문에서 해당 문장 직접 찾아서 강제 주입
+      if (!parsed[IDX_COMP].found) {
+        const sentences = fullRaw.split(/[.。
+]/).map(s => s.trim()).filter(s => s.includes(matchedVague));
+        if (sentences.length > 0) {
+          parsed[IDX_COMP].found = true;
+          parsed[IDX_COMP].details = sentences;
+          parsed[IDX_COMP].detail  = sentences.join(' / ');
+        }
+      }
       flags[IDX_COMP] = {
         auto: true,
         result: '보류',
