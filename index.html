@@ -534,6 +534,17 @@
     flex-shrink: 0;
     margin-top: 1px;
   }
+  .result-bullet-flagged {
+    color: var(--text-primary);
+    background: var(--red-bg);
+    border-radius: 6px;
+    padding: 3px 8px;
+    margin: -3px -8px;
+    font-weight: 500;
+  }
+  .result-bullet-flagged::before {
+    color: var(--red-text);
+  }
 
   .tab-bar {
     display: flex; gap: 4px;
@@ -608,6 +619,10 @@
   .icon-dot { font-size: 14px; }
   .detail-text { font-size: 11px; color: var(--text-secondary); margin-top: 2px; line-height: 1.5; }
   .detail-text.truncatable { cursor: help; position: relative; }
+  .detail-mark {
+    background: var(--red-bg); color: var(--red-text);
+    font-weight: 600; padding: 0 2px; border-radius: 3px;
+  }
   .detail-tooltip {
     visibility: hidden;
     opacity: 0;
@@ -788,7 +803,7 @@
       <div class="logo-sub">One-Click Care Check</div>
     </div>
     <div style="display:flex;align-items:center;gap:14px">
-      <span style="font-size:10px; color:var(--text-muted); letter-spacing:0.05em;">v1.9.0 · 2026-06-22</span>
+      <span style="font-size:10px; color:var(--text-muted); letter-spacing:0.05em;">v1.9.1 · 2026-06-22</span>
       <button onclick="doLogout()" style="font-size:11px;color:var(--text-muted);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:3px;padding:4px 6px;border-radius:4px;transition:color .15s;" onmouseover="this.style.color='var(--red-text)'" onmouseout="this.style.color='var(--text-muted)'">
         <i class="ti ti-logout" style="font-size:13px"></i> 로그아웃
       </button>
@@ -1127,12 +1142,24 @@
     parsedStore[storeKey] = { items, idPrefix, targetId, isModal };
 
     const buildItem = (item, idx) => {
+      const flag = mismatch[idx];
+      // 선판정 경고문 ("키워드") 에서 실제 매칭된 키워드를 추출 —
+      // 그 키워드가 들어있는 발췌 문장에 강조 표시를 입힘
+      let warnKeyword = '';
+      if (flag && flag.warn) {
+        const m = flag.warn.match(/\("([^"]+)"\)/);
+        if (m) warnKeyword = m[1];
+      }
       const bullets = (item.details && item.details.length)
-        ? item.details.map(d => `<div class="result-bullet">${escHtml(d)}</div>`).join('')
+        ? item.details.map(d => {
+            const isFlagged = warnKeyword && d.includes(warnKeyword);
+            return isFlagged
+              ? `<div class="result-bullet result-bullet-flagged">${escHtml(d)}</div>`
+              : `<div class="result-bullet">${escHtml(d)}</div>`;
+          }).join('')
         : item.detail
           ? `<div class="result-bullet">${escHtml(item.detail)}</div>`
           : '';
-      const flag = mismatch[idx];
       const warnHtml = flag
         ? `<div style="margin-top:5px;font-size:11px;font-weight:600;color:${flag.auto ? 'var(--red-text)' : 'var(--accent)'};padding:4px 8px;background:${flag.auto ? 'var(--red-bg)' : 'var(--accent-soft-bg)'};border-radius:6px">${flag.auto ? '⚠ 자동 보류 — ' : 'ℹ '}${escHtml(flag.warn)}</div>`
         : '';
@@ -1805,12 +1832,20 @@
         const warnHtml = flag
           ? `<div class="mismatch-text">${flag.auto ? '⚠ ' : 'ℹ '}${escHtml(flag.warn)}</div>`
           : '';
+        let warnKeyword = '';
+        if (flag && flag.warn) {
+          const m = flag.warn.match(/\("([^"]+)"\)/);
+          if (m) warnKeyword = m[1];
+        }
         let detailHtml = '';
         if (detail) {
+          const highlightedDetail = warnKeyword
+            ? escHtml(detail).split(escHtml(warnKeyword)).join(`<mark class="detail-mark">${escHtml(warnKeyword)}</mark>`)
+            : escHtml(detail);
           if (detail.length > 60) {
-            detailHtml = `<div class="detail-text truncatable">${escHtml(detail.slice(0,60))}…<div class="detail-tooltip">${escHtml(detail)}</div></div>`;
+            detailHtml = `<div class="detail-text truncatable">${escHtml(detail.slice(0,60))}…<div class="detail-tooltip">${highlightedDetail}</div></div>`;
           } else {
-            detailHtml = `<div class="detail-text">${escHtml(detail)}</div>`;
+            detailHtml = `<div class="detail-text">${highlightedDetail}</div>`;
           }
         }
         const tmplOpts = HOLD_TEMPLATES[item.label];
