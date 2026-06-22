@@ -589,9 +589,10 @@
   }
   .batch-table td .result-badge-inline {
     display: inline-block;
-    font-size: 10px; font-weight: 600;
-    padding: 2px 7px; border-radius: 20px;
+    font-size: 9.5px; font-weight: 600;
+    padding: 2px 6px; border-radius: 20px;
     white-space: nowrap; flex-shrink: 0;
+    letter-spacing: -0.2px;
   }
   .batch-table td .result-badge-inline.found { background: #E6EEF7; color: #1A5490; }
   .batch-table td .result-badge-inline.notfound { background: var(--bg-tertiary); color: var(--text-muted); }
@@ -787,7 +788,7 @@
       <div class="logo-sub">One-Click Care Check</div>
     </div>
     <div style="display:flex;align-items:center;gap:14px">
-      <span style="font-size:10px; color:var(--text-muted); letter-spacing:0.05em;">v1.8.0 · 2026-06-22</span>
+      <span style="font-size:10px; color:var(--text-muted); letter-spacing:0.05em;">v1.9.0 · 2026-06-22</span>
       <button onclick="doLogout()" style="font-size:11px;color:var(--text-muted);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:3px;padding:4px 6px;border-radius:4px;transition:color .15s;" onmouseover="this.style.color='var(--red-text)'" onmouseout="this.style.color='var(--text-muted)'">
         <i class="ti ti-logout" style="font-size:13px"></i> 로그아웃
       </button>
@@ -987,11 +988,11 @@
                 <th style="width:130px">모델/색상/소재</th>
                 <th style="width:90px">사이즈</th>
                 <th style="width:90px">새상품</th>
-                <th style="width:80px">연식각인</th>
+                <th style="width:100px">연식각인</th>
                 <th style="width:120px">구성품</th>
-                <th style="width:90px">구성품 연식</th>
-                <th style="width:80px">수선각인</th>
-                <th style="width:80px">하자</th>
+                <th style="width:100px">구성품 연식</th>
+                <th style="width:100px">수선각인</th>
+                <th style="width:100px">하자</th>
                 <th style="width:130px">사용감 참고</th>
               </tr>
             </thead>
@@ -1100,7 +1101,7 @@
     delete judgeSelections['judge-content'];
 
     renderParsed(h.parsed, h.raw, mismatch);
-    renderInputHighlight(h.content, h.parsed);
+    renderInputHighlight(h.content, h.parsed, mismatch);
 
     if (!judgeSelections['judge-content'] || !judgeSelections['judge-content'].length) {
       document.getElementById('judge-empty').style.display = 'flex';
@@ -1491,7 +1492,7 @@
       renderHistory();
 
       renderParsed(parsed, raw, mismatch);
-      renderInputHighlight(content, parsed);
+      renderInputHighlight(content, parsed, mismatch);
       setStatus('s-done', '검수 완료');
 
     } catch (e) {
@@ -1517,12 +1518,9 @@
 
   /* AI가 발췌한 문장들을 입력 본문 위에 하이라이트로 표시.
      원본 텍스트는 건드리지 않고, 화면 표시용 div에만 마크업을 입힌다. */
-  function renderInputHighlight(content, parsed) {
-    const ta = document.getElementById('inp-content');
-    const display = document.getElementById('input-display');
-    const hint = document.getElementById('input-hl-hint');
-
-    // 모든 발췌 문장을 모아 길이 내림차순 정렬 (긴 문장을 먼저 매칭해야 겹침 방지)
+  /* 본문 텍스트 + AI 발췌 + 선판정 경고 키워드를 합쳐 하이라이트된 HTML을 생성.
+     개별검수 입력패널과 일괄검수 모달이 공통으로 사용 */
+  function buildHighlightedHtml(content, parsed, mismatch) {
     let phrases = [];
     parsed.forEach(item => {
       (item.details || []).forEach(d => {
@@ -1530,16 +1528,20 @@
         if (trimmed && trimmed.length >= 2) phrases.push(trimmed);
       });
     });
-    phrases = [...new Set(phrases)].sort((a, b) => b.length - a.length);
 
-    if (!phrases.length) {
-      ta.style.display = '';
-      display.style.display = 'none';
-      hint.style.display = 'none';
-      return;
+    // 선판정 경고문에 ("키워드") 형태로 들어있는 실제 매칭 키워드도 하이라이트 대상에 추가
+    // (예: 구성품 모호 표현 기재 ("구성품 모두") — 본문 직접 확인 필요)
+    if (mismatch) {
+      Object.values(mismatch).forEach(flag => {
+        if (!flag || !flag.warn) return;
+        const m = flag.warn.match(/\("([^"]+)"\)/);
+        if (m && m[1]) phrases.push(m[1]);
+      });
     }
 
-    // 텍스트를 토큰(일반 텍스트 / 하이라이트 대상)으로 분할
+    phrases = [...new Set(phrases)].sort((a, b) => b.length - a.length);
+    if (!phrases.length) return null;
+
     let segments = [{ text: content, hl: false }];
     phrases.forEach(phrase => {
       const next = [];
@@ -1557,9 +1559,24 @@
       segments = next;
     });
 
-    const html = segments.map(seg =>
+    return segments.map(seg =>
       seg.hl ? `<span class="input-hl">${escHtml(seg.text)}</span>` : escHtml(seg.text)
     ).join('');
+  }
+
+  function renderInputHighlight(content, parsed, mismatch) {
+    const ta = document.getElementById('inp-content');
+    const display = document.getElementById('input-display');
+    const hint = document.getElementById('input-hl-hint');
+
+    const html = buildHighlightedHtml(content, parsed, mismatch);
+
+    if (!html) {
+      ta.style.display = '';
+      display.style.display = 'none';
+      hint.style.display = 'none';
+      return;
+    }
 
     display.innerHTML = html;
     ta.style.display = 'none';
@@ -1780,8 +1797,8 @@
       tr.className = '';
       const cells = parsed.map((item, idx) => {
         const icon = item.found
-          ? '<span class="result-badge-inline found">기재</span>'
-          : '<span class="result-badge-inline notfound">미기재</span>';
+          ? '<span class="result-badge-inline found">확인 필요</span>'
+          : '<span class="result-badge-inline notfound">확인 불필요</span>';
         const detail = (item.details || []).join(' / ');
         const flag = mismatch[idx];
         const cellClass = flag ? (flag.auto ? 'cell-mismatch' : 'cell-warn') : '';
@@ -2190,37 +2207,10 @@
     document.getElementById('bd-careno').textContent = r.careNo || '—';
     document.getElementById('bd-title').textContent = r.title || '(상품명 없음)';
 
-    // 입력 본문 + 하이라이트
+    // 입력 본문 + 하이라이트 (AI 발췌 + 선판정 경고 키워드 모두 포함)
     const bdInput = document.getElementById('bd-input-display');
     const combined = r.title ? `${r.title}\n${r.body}` : r.body;
-    let phrases = [];
-    r.parsed.forEach(item => {
-      (item.details || []).forEach(d => {
-        const trimmed = (d || '').trim();
-        if (trimmed && trimmed.length >= 2) phrases.push(trimmed);
-      });
-    });
-    phrases = [...new Set(phrases)].sort((a, b) => b.length - a.length);
-
-    let segments = [{ text: combined, hl: false }];
-    phrases.forEach(phrase => {
-      const next = [];
-      segments.forEach(seg => {
-        if (seg.hl) { next.push(seg); return; }
-        const idx = seg.text.indexOf(phrase);
-        if (idx === -1) { next.push(seg); return; }
-        const before = seg.text.slice(0, idx);
-        const match  = seg.text.slice(idx, idx + phrase.length);
-        const after  = seg.text.slice(idx + phrase.length);
-        if (before) next.push({ text: before, hl: false });
-        next.push({ text: match, hl: true });
-        if (after) next.push({ text: after, hl: false });
-      });
-      segments = next;
-    });
-    bdInput.innerHTML = segments.map(seg =>
-      seg.hl ? `<span class="input-hl">${escHtml(seg.text)}</span>` : escHtml(seg.text)
-    ).join('');
+    bdInput.innerHTML = buildHighlightedHtml(combined, r.parsed, r.mismatch) || escHtml(combined);
 
     // 보류 사유 선택 목록 초기화 (이전 케어번호의 선택이 남지 않도록)
     delete judgeSelections['bd-judge-content'];
