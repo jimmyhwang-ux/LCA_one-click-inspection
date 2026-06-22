@@ -701,7 +701,7 @@
       <div style="display:flex;flex-direction:column;gap:4px">
         <div class="criteria-item" onclick="toggleCriteria(this)">
           <div class="criteria-header"><span><span style="color:var(--red-text);font-weight:600;margin-right:4px">⚠</span>구성품 모호 표현 기재</span><i class="ti ti-chevron-down ci-arrow"></i></div>
-          <div class="criteria-body">풀구성·풀박스·풀세트·풀셋·구성 동일·구성 그대로 등<br>→ 자동 보류 처리</div>
+          <div class="criteria-body">풀구성·풀박스·풀세트·풀셋·다 가지고 있어요·구성 동일·구성 그대로 등<br>→ 자동 보류 처리</div>
         </div>
         <div class="criteria-item" onclick="toggleCriteria(this)">
           <div class="criteria-header"><span><span style="color:var(--red-text);font-weight:600;margin-right:4px">⚠</span>사이즈 속성 vs 본문 불일치</span><i class="ti ti-chevron-down ci-arrow"></i></div>
@@ -718,7 +718,7 @@
       </div>
     </div>
   <div style="padding: 0.75rem 1.25rem; border-top: 0.5px solid var(--border-light); display:flex; align-items:center; justify-content:space-between;">
-    <span style="font-size:10px; color:var(--text-muted); letter-spacing:0.05em;">v1.2.0 · 2026-06-22</span>
+    <span style="font-size:10px; color:var(--text-muted); letter-spacing:0.05em;">v1.2.1 · 2026-06-22</span>
     <button onclick="doLogout()" style="font-size:10px;color:var(--text-muted);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:3px;padding:2px 4px;border-radius:4px;transition:color .15s;" onmouseover="this.style.color='var(--red-text)'" onmouseout="this.style.color='var(--text-muted)'">
       <i class="ti ti-logout" style="font-size:12px"></i> 로그아웃
     </button>
@@ -1600,7 +1600,15 @@
     const aiFoundText = idx => (parsed[idx].details || []).join(' ');
 
     /* ── 1. 기재 구성품: 모호한 표현 — 본문 원문에서만 검색, AI 발췌는 그대로 둠 ── */
-    const vagueKeywords = ['풀구성', '풀박스', '구매 당시 그대로', '구매당시그대로', '풀세트', '풀셋', '전부 있', '전부있', '다 있', '다있', '구성 동일', '구성이 동일', '동일한 구성', '구성과 동일', '구성그대로', '구성 그대로'];
+    const vagueKeywords = [
+      '풀구성', '풀박스', '풀세트', '풀셋',
+      '구매 당시 그대로', '구매당시그대로',
+      '전부 있', '전부있', '전부 가지고', '전부가지고',
+      '다 있', '다있', '다 가지고', '다가지고', '다 갖고', '다갖고',
+      '모두 있', '모두있', '모두 가지고', '모두가지고',
+      '구성품 다', '구성품 모두', '구성품 전부',
+      '구성 동일', '구성이 동일', '동일한 구성', '구성과 동일', '구성그대로', '구성 그대로'
+    ];
     const matchedVague = vagueKeywords.find(kw => fullRaw.includes(kw));
     if (matchedVague) {
       flags[IDX_COMP] = {
