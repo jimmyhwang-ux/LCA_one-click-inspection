@@ -423,6 +423,35 @@
   }
   .result-badge.found { background: #E6EEF7; color: #1A5490; }
   .result-badge.notfound { background: var(--bg-tertiary); color: var(--text-muted); }
+
+  .hold-btn {
+    font-size: 10.5px; font-weight: 600;
+    padding: 2px 9px; border-radius: 20px;
+    background: var(--red-bg); color: var(--red-text);
+    border: none; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 3px;
+    flex-shrink: 0;
+    transition: opacity .15s;
+  }
+  .hold-btn:hover { opacity: .8; }
+  .hold-btn:disabled { opacity: .35; cursor: not-allowed; }
+
+  .notfound-toggle-row { margin-top: 10px; }
+  .notfound-toggle-btn {
+    font-size: 11px; color: var(--text-muted);
+    background: var(--bg-secondary); border: none; border-radius: 8px;
+    padding: 6px 12px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 5px;
+    width: 100%; justify-content: center;
+  }
+  .notfound-toggle-btn:hover { background: var(--bg-tertiary); }
+
+  .result-empty-inline {
+    list-style: none;
+    font-size: 12px; color: var(--text-muted);
+    text-align: center; padding: 1.5rem 0;
+  }
+
   .result-dot-wrap {
     width: 18px; height: 18px;
     border: 1.5px solid var(--border-mid);
@@ -713,7 +742,7 @@
       <div class="logo-sub">One-Click Care Check</div>
     </div>
     <div style="display:flex;align-items:center;gap:14px">
-      <span style="font-size:10px; color:var(--text-muted); letter-spacing:0.05em;">v1.5.1 · 2026-06-22</span>
+      <span style="font-size:10px; color:var(--text-muted); letter-spacing:0.05em;">v1.6.0 · 2026-06-22</span>
       <button onclick="doLogout()" style="font-size:11px;color:var(--text-muted);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:3px;padding:4px 6px;border-radius:4px;transition:color .15s;" onmouseover="this.style.color='var(--red-text)'" onmouseout="this.style.color='var(--text-muted)'">
         <i class="ti ti-logout" style="font-size:13px"></i> 로그아웃
       </button>
@@ -760,11 +789,11 @@
         </div>
         <div class="judge-card" id="judge-card">
           <div class="judge-card-title">
-            <i class="ti ti-template"></i> 보류 필요 시 판정 가이드
+            <i class="ti ti-template"></i> 보류 사유
           </div>
           <div class="judge-empty" id="judge-empty">
             <i class="ti ti-clipboard-list"></i>
-            <p>AI 추출 완료 후<br>보류 사유 템플릿을 확인하세요</p>
+            <p>항목 옆 보류 버튼을 클릭하면<br>해당 항목의 판정 가이드가 표시됩니다</p>
           </div>
           <div id="judge-content" style="display:none"></div>
         </div>
@@ -952,7 +981,7 @@
           <div id="bd-result-content" style="display:none"></div>
         </div>
         <div class="judge-card">
-          <div class="judge-card-title"><i class="ti ti-template"></i> 보류 필요 시 판정 가이드</div>
+          <div class="judge-card-title"><i class="ti ti-template"></i> 보류 사유</div>
           <div id="bd-judge-content" style="display:none"></div>
         </div>
       </div>
@@ -994,7 +1023,10 @@
       '<i class="ti ti-file-search"></i><p>상품명과 본문을 입력하고<br>AI 검수 시작 버튼을 눌러주세요</p>';
     document.getElementById('result-content').style.display = 'none';
     document.getElementById('judge-empty').style.display = 'flex';
+    document.getElementById('judge-empty').innerHTML =
+      '<i class="ti ti-clipboard-list"></i><p>항목 옆 보류 버튼을 클릭하면<br>해당 항목의 판정 가이드가 표시됩니다</p>';
     document.getElementById('judge-content').style.display = 'none';
+    document.getElementById('judge-content').innerHTML = '';
     setStatus('s-idle', '대기 중');
     setMetrics(null, null, null);
   }
@@ -1019,17 +1051,28 @@
     const mismatch = checkAttrMismatch({ sizeAttr: '', statusAttr: '', category: '', title: '' }, h.parsed);
     renderParsed(h.parsed, h.raw, mismatch);
     renderInputHighlight(h.content, h.parsed);
+    document.getElementById('judge-empty').style.display = 'flex';
+    document.getElementById('judge-empty').innerHTML =
+      '<i class="ti ti-clipboard-list"></i><p>항목 옆 보류 버튼을 클릭하면<br>해당 항목의 판정 가이드가 표시됩니다</p>';
+    document.getElementById('judge-content').style.display = 'none';
+    document.getElementById('judge-content').innerHTML = '';
     setStatus('s-done', '검수 완료');
   }
 
-  function renderParsed(items, raw, mismatch, targetId) {
+  function renderParsed(items, raw, mismatch, targetId, idPrefix) {
     targetId = targetId || 'result-content';
+    idPrefix = idPrefix || 'r';
     mismatch = mismatch || {};
     const pass = items.filter(i => i.found).length;
     const fail = items.length - pass;
     if (targetId === 'result-content') setMetrics(items.length, pass, fail);
 
-    const itemsHtml = items.map((item, idx) => {
+    // 클릭 시 판정 가이드에서 즉시 조회할 수 있도록 항목 데이터를 저장
+    const storeKey = `${idPrefix}_${targetId}`;
+    const isModal = targetId === 'bd-result-content';
+    parsedStore[storeKey] = { items, idPrefix, targetId, isModal };
+
+    const buildItem = (item, idx) => {
       const bullets = (item.details && item.details.length)
         ? item.details.map(d => `<div class="result-bullet">${escHtml(d)}</div>`).join('')
         : item.detail
@@ -1039,18 +1082,46 @@
       const warnHtml = flag
         ? `<div style="margin-top:5px;font-size:11px;font-weight:600;color:${flag.auto ? 'var(--red-text)' : 'var(--accent)'};padding:4px 8px;background:${flag.auto ? 'var(--red-bg)' : 'var(--accent-soft-bg)'};border-radius:6px">${flag.auto ? '⚠ 자동 보류 — ' : 'ℹ '}${escHtml(flag.warn)}</div>`
         : '';
+      const hasTmpl = HOLD_TEMPLATES[item.label] && HOLD_TEMPLATES[item.label].length;
+      const holdBtn = item.found
+        ? `<button class="hold-btn" onclick="showJudgeFor('${storeKey}',${idx})" ${hasTmpl ? '' : 'disabled'}>
+             <i class="ti ti-flag" aria-hidden="true"></i> 보류
+           </button>`
+        : '';
 
       return `
         <li class="result-item">
           <div class="result-item-header">
             <span class="result-name">${escHtml(item.label)}</span>
-            <span class="result-badge ${item.found ? 'found' : 'notfound'}">${item.found ? '기재' : '미기재'}</span>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span class="result-badge ${item.found ? 'found' : 'notfound'}">${item.found ? '기재' : '미기재'}</span>
+              ${holdBtn}
+            </div>
           </div>
           ${bullets ? `<div class="result-bullets">${bullets}</div>` : ''}
           ${warnHtml}
         </li>
       `;
-    }).join('');
+    };
+
+    const foundItems = [];
+    const notFoundItems = [];
+    items.forEach((item, idx) => {
+      (item.found ? foundItems : notFoundItems).push(buildItem(item, idx));
+    });
+
+    const notFoundPanelId = `${idPrefix}_nf_${targetId}`;
+    const notFoundToggleId = `${idPrefix}_nft_${targetId}`;
+    const notFoundSection = notFoundItems.length
+      ? `
+        <div class="notfound-toggle-row">
+          <button id="${notFoundToggleId}" class="notfound-toggle-btn" onclick="toggleNotFound('${notFoundPanelId}','${notFoundToggleId}')">
+            <i class="ti ti-chevron-down" aria-hidden="true"></i> 미기재 항목 보기 (${notFoundItems.length})
+          </button>
+        </div>
+        <ul class="result-list" id="${notFoundPanelId}" style="display:none">${notFoundItems.join('')}</ul>
+      `
+      : '';
 
     const rc = document.getElementById(targetId);
     if (targetId === 'result-content') {
@@ -1062,10 +1133,62 @@
         <i class="ti ti-robot"></i>
         AI 추출 항목화 결과
       </div>
-      <ul class="result-list">${itemsHtml}</ul>
+      <ul class="result-list">${foundItems.join('') || '<li class="result-empty-inline">기재된 항목이 없습니다</li>'}</ul>
+      ${notFoundSection}
     `;
+  }
 
-    if (targetId === 'result-content') renderJudgePanel(items);
+  const parsedStore = {};
+
+  function showJudgeFor(storeKey, idx) {
+    const entry = parsedStore[storeKey];
+    if (!entry) return;
+    const item = entry.items[idx];
+    if (!entry.isModal) document.getElementById('judge-empty').style.display = 'none';
+    renderJudgeSingle(item, entry.targetId === 'bd-result-content' ? 'bd-judge-content' : 'judge-content', entry.idPrefix);
+  }
+
+  function renderJudgeSingle(item, targetId, idPrefix) {
+    const jc = document.getElementById(targetId);
+    jc.style.display = 'block';
+    const tmpls = HOLD_TEMPLATES[item.label] || [];
+    if (!tmpls.length) {
+      jc.innerHTML = `<div class="judge-empty"><i class="ti ti-circle-check"></i><p>이 항목은 보류 템플릿이<br>준비되어 있지 않습니다</p></div>`;
+      return;
+    }
+    const rows = tmpls.map((t, ti) => {
+      const dataId = `${idPrefix}data_${ti}`;
+      const btnId  = `${idPrefix}btn_${ti}`;
+      return `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;background:var(--bg-secondary);border-radius:var(--radius-md);margin-top:6px">
+          <span id="${dataId}" data-value="${escHtml(t.value)}" style="font-size:11px;color:var(--text-secondary);line-height:1.5;flex:1">${escHtml(t.value)}</span>
+          <button id="${btnId}" onclick="judgeCopyDirect('${btnId}','${dataId}')" style="flex-shrink:0;display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:3px 8px;border:0.5px solid var(--border-mid);border-radius:var(--radius-md);background:transparent;color:var(--text-secondary);cursor:pointer;white-space:nowrap">
+            <i class="ti ti-clipboard" aria-hidden="true"></i> 복사
+          </button>
+        </div>`;
+    }).join('');
+    jc.innerHTML = `
+      <div class="judge-item">
+        <div class="judge-header">
+          <span class="judge-name">${escHtml(item.label)}</span>
+        </div>
+        <div style="padding:4px 8px 8px">${rows}</div>
+      </div>`;
+  }
+
+  function toggleNotFound(panelId, toggleId) {
+    const panel = document.getElementById(panelId);
+    const btn = document.getElementById(toggleId);
+    if (!panel || !btn) return;
+    const isOpen = panel.style.display !== 'none';
+    const count = panel.children.length;
+    if (isOpen) {
+      panel.style.display = 'none';
+      btn.innerHTML = `<i class="ti ti-chevron-down" aria-hidden="true"></i> 미기재 항목 보기 (${count})`;
+    } else {
+      panel.style.display = 'block';
+      btn.innerHTML = `<i class="ti ti-chevron-up" aria-hidden="true"></i> 미기재 항목 접기`;
+    }
   }
 
   const HOLD_TEMPLATES = {
@@ -1106,62 +1229,6 @@
       { label: "구성품 연식 확인 필요", value: "보류 > 기타 > 입고된 상품의 구성품 연식을 확인해주세요." }
     ]
   };
-
-  function renderJudgePanel(items, targetId, idPrefix) {
-    targetId = targetId || 'judge-content';
-    idPrefix = idPrefix || 'j';
-    if (targetId === 'judge-content') {
-      document.getElementById('judge-empty').style.display = 'none';
-    }
-    const jc = document.getElementById(targetId);
-    jc.style.display = 'block';
-
-    const judgeItems = items
-      .filter(item => item.found && HOLD_TEMPLATES[item.label])
-      .map((item, i) => {
-        const tmpls = HOLD_TEMPLATES[item.label] || [];
-        const tmplRows = tmpls.map((t, ti) => {
-          const dataId = `${idPrefix}data_${i}_${ti}`;
-          const btnId  = `${idPrefix}btn_${i}_${ti}`;
-          return `
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;background:var(--bg-secondary);border-radius:var(--radius-md);margin-top:6px">
-              <span id="${dataId}" data-value="${escHtml(t.value)}" style="font-size:11px;color:var(--text-secondary);line-height:1.5;flex:1">${escHtml(t.value)}</span>
-              <button id="${btnId}" onclick="judgeCopyDirect('${btnId}','${dataId}')" style="flex-shrink:0;display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:3px 8px;border:0.5px solid var(--border-mid);border-radius:var(--radius-md);background:transparent;color:var(--text-secondary);cursor:pointer;white-space:nowrap">
-                <i class="ti ti-clipboard" aria-hidden="true"></i> 복사
-              </button>
-            </div>`;
-        }).join('');
-        const panelId = `${idPrefix}tmpl_${i}`;
-        const toggleId = `${idPrefix}toggle_${i}`;
-        return `
-          <div class="judge-item">
-            <div class="judge-header">
-              <span class="judge-name">${escHtml(item.label)}</span>
-              <button id="${toggleId}" onclick="toggleJudgeTmpl('${panelId}','${toggleId}')" style="font-size:10.5px;color:var(--accent);background:var(--accent-soft-bg);border:none;border-radius:6px;padding:3px 8px;cursor:pointer;display:inline-flex;align-items:center;gap:3px">
-                <i class="ti ti-chevron-down" aria-hidden="true"></i> 보류 사유 보기 (${tmpls.length})
-              </button>
-            </div>
-            <div id="${panelId}" style="display:none;padding:4px 8px 8px">${tmplRows}</div>
-          </div>`;
-      }).join('');
-
-    jc.innerHTML = judgeItems
-      ? `<div class="judge-list">${judgeItems}</div>`
-      : `<div class="judge-empty"><i class="ti ti-circle-check"></i><p>보류 템플릿 대상 항목이<br>없습니다</p></div>`;
-  }
-
-  function toggleJudgeTmpl(panelId, toggleId) {
-    const panel = document.getElementById(panelId);
-    const btn = document.getElementById(toggleId);
-    const isOpen = panel.style.display !== 'none';
-    if (isOpen) {
-      panel.style.display = 'none';
-      btn.innerHTML = `<i class="ti ti-chevron-down" aria-hidden="true"></i> 보류 사유 보기 (${panel.children.length})`;
-    } else {
-      panel.style.display = 'block';
-      btn.innerHTML = `<i class="ti ti-chevron-up" aria-hidden="true"></i> 보류 사유 접기 (${panel.children.length})`;
-    }
-  }
 
   function judgeCopyDirect(btnId, dataId) {
     const text = document.getElementById(dataId).dataset.value;
@@ -2023,11 +2090,13 @@
       seg.hl ? `<span class="input-hl">${escHtml(seg.text)}</span>` : escHtml(seg.text)
     ).join('');
 
-    // AI 추출 결과
-    renderParsed(r.parsed, r.raw, r.mismatch, 'bd-result-content');
+    // AI 추출 결과 (idPrefix 'bd'로 모달 전용 store key 생성)
+    renderParsed(r.parsed, r.raw, r.mismatch, 'bd-result-content', 'bd');
 
-    // 판정 패널
-    renderJudgePanel(r.parsed, 'bd-judge-content', 'bd');
+    // 판정 가이드는 보류 버튼 클릭 전까지 빈 상태로 초기화
+    document.getElementById('bd-judge-content').innerHTML =
+      `<div class="judge-empty"><i class="ti ti-clipboard-list"></i><p>항목 옆 보류 버튼을 클릭하면<br>해당 항목의 판정 가이드가 표시됩니다</p></div>`;
+    document.getElementById('bd-judge-content').style.display = 'block';
 
     document.getElementById('batch-detail-modal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
