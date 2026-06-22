@@ -30,6 +30,8 @@
     --green-text: #3B6010;
     --red-bg: #FAE8E8;
     --red-text: #9B2B2B;
+    --yellow-bg: #FBF0D2;
+    --yellow-text: #8A6D1D;
     --blue-bg: #E6EEF7;
     --blue-text: #1A5490;
     --shadow-card: 0 2px 10px rgba(60,50,30,0.07);
@@ -428,7 +430,7 @@
   .hold-btn {
     font-size: 10.5px; font-weight: 600;
     padding: 2px 9px; border-radius: 20px;
-    background: var(--red-bg); color: var(--red-text);
+    background: var(--yellow-bg); color: var(--yellow-text);
     border: none; cursor: pointer;
     display: inline-flex; align-items: center; gap: 3px;
     transition: opacity .15s;
@@ -460,7 +462,8 @@
     width: 100%; justify-content: center;
   }
   .check-toggle-btn:hover { background: var(--bg-tertiary); }
-  .check-toggle-btn.check-toggle-open { color: var(--text-secondary); }
+  .check-toggle-btn.check-toggle-open { background: #E6EEF7; color: #1A5490; }
+  .check-toggle-btn.check-toggle-open:hover { background: #D7E5F3; }
 
   .judge-reason-row {
     display: flex; align-items: flex-start; gap: 8px;
@@ -803,7 +806,7 @@
       <div class="logo-sub">One-Click Care Check</div>
     </div>
     <div style="display:flex;align-items:center;gap:14px">
-      <span style="font-size:10px; color:var(--text-muted); letter-spacing:0.05em;">v1.9.1 · 2026-06-22</span>
+      <span style="font-size:10px; color:var(--text-muted); letter-spacing:0.05em;">v1.9.2 · 2026-06-22</span>
       <button onclick="doLogout()" style="font-size:11px;color:var(--text-muted);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:3px;padding:4px 6px;border-radius:4px;transition:color .15s;" onmouseover="this.style.color='var(--red-text)'" onmouseout="this.style.color='var(--text-muted)'">
         <i class="ti ti-logout" style="font-size:13px"></i> 로그아웃
       </button>
@@ -1270,15 +1273,16 @@
     if (!panel || !btn) return;
     const count = panel.children.length;
     const isOpen = panel.style.display !== 'none';
+    const isCheckNeeded = label === '확인 필요';
     if (isOpen) {
       panel.style.display = 'none';
-      btn.classList.remove('check-toggle-open');
       btn.innerHTML = `<i class="ti ti-chevron-down" aria-hidden="true"></i> ${label} (${count})`;
     } else {
       panel.style.display = 'block';
-      btn.classList.add('check-toggle-open');
       btn.innerHTML = `<i class="ti ti-chevron-up" aria-hidden="true"></i> ${label} (${count})`;
     }
+    // "확인 필요"는 펼침/접힘 상태와 무관하게 항상 파란색 유지, "확인 불필요"는 항상 회색
+    btn.classList.toggle('check-toggle-open', isCheckNeeded);
   }
 
   function toggleHoldDd(ddId) {
