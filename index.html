@@ -46,64 +46,44 @@
   }
 
   .layout {
-    display: grid;
-    grid-template-columns: 300px 1fr;
+    display: flex;
+    flex-direction: column;
     min-height: 100vh;
   }
 
-  .sidebar {
+  .topbar {
     background: var(--bg-primary);
-    border-right: none;
     box-shadow: var(--shadow-card);
-    padding: 1.5rem 1.25rem;
+    padding: 0.85rem 1.5rem;
     display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    overflow-y: auto;
-    z-index: 1;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 2;
+    position: relative;
   }
 
   .logo {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 10px;
-    padding-bottom: 1.25rem;
-    border-bottom: 0.5px solid var(--border-light);
-    text-align: center;
-  }
-  .logo-icon {
-    width: 48px; height: 48px;
-    background: var(--text-primary);
-    border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
+    gap: 12px;
   }
   .logo-name {
-    font-size: 38px; font-weight: 400;
-    letter-spacing: 2px;
+    font-size: 26px; font-weight: 400;
+    letter-spacing: 1px;
     color: var(--text-primary);
     font-family: 'Pinyon Script', Georgia, cursive;
-    line-height: 1.1;
+    line-height: 1;
   }
   .logo-divider {
-    display: flex; align-items: center; gap: 10px;
-    width: 60%;
-  }
-  .logo-divider::before, .logo-divider::after {
-    content: ''; flex: 1;
-    height: 1px; background: var(--accent);
+    width: 1px; height: 22px;
+    background: var(--border-mid);
   }
   .logo-sub {
-    font-size: 13px;
+    font-size: 10.5px;
     font-weight: 600;
-    letter-spacing: 3px;
+    letter-spacing: 2px;
     color: var(--text-secondary);
     text-transform: uppercase;
-    margin-top: 0;
   }
 
   .form-group { display: flex; flex-direction: column; gap: 5px; }
@@ -212,11 +192,55 @@
 
   .single-layout {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1.15fr 1fr;
     gap: 1rem;
     align-items: stretch;
   }
-  @media (max-width: 900px) { .single-layout { grid-template-columns: 1fr; } }
+  @media (max-width: 1200px) { .single-layout { grid-template-columns: 1fr; } }
+
+  .input-card {
+    background: var(--bg-primary);
+    box-shadow: var(--shadow-card);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    min-height: 420px;
+  }
+  .input-card-title {
+    font-size: 13px; font-weight: 600; color: var(--text-primary);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .input-display {
+    flex: 1;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: 0.85rem;
+    font-size: 13px;
+    line-height: 1.85;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-y: auto;
+    max-height: 480px;
+  }
+  .input-hl {
+    background: #FFE8C2;
+    border: 1px dashed var(--accent);
+    border-radius: 3px;
+    padding: 0 2px;
+    color: var(--text-primary);
+  }
+  .input-hl-hint {
+    font-size: 10.5px; color: var(--text-muted);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .input-hl-hint .swatch {
+    display: inline-block; width: 10px; height: 10px;
+    border: 1px dashed var(--accent); border-radius: 2px; background: #FFE8C2;
+    flex-shrink: 0;
+  }
 
   .result-card {
     background: var(--bg-primary);
@@ -275,6 +299,91 @@
     border: 0.5px solid var(--border-mid); border-radius: var(--radius-md);
     background: var(--bg-secondary); color: var(--text-primary); margin-bottom: 8px;
   }
+
+  /* 보조 패널(최근 검수 내역 / 검수+선판정 기준) - 개별검수 탭 하단 */
+  .aux-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  @media (max-width: 900px) { .aux-row { grid-template-columns: 1fr; } }
+  .aux-card {
+    background: var(--bg-primary);
+    box-shadow: var(--shadow-card-sm);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .aux-card-title {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px;
+    font-size: 13px; font-weight: 600; color: var(--text-primary);
+    cursor: pointer;
+  }
+  .aux-card-title span { display: flex; align-items: center; gap: 7px; }
+  .aux-arrow { font-size: 14px; color: var(--text-muted); transition: transform .15s; }
+  .aux-card.open .aux-arrow { transform: rotate(180deg); }
+  .aux-card-body {
+    display: none;
+    padding: 0 16px 16px;
+    border-top: 0.5px solid var(--border-light);
+    padding-top: 12px;
+  }
+  .aux-card.open .aux-card-body { display: block; }
+
+  /* 일괄검수 - 업로드 아래 컨트롤바 */
+  .batch-controls-bar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
+    background: var(--bg-primary);
+    box-shadow: var(--shadow-card-sm);
+    border-radius: var(--radius-lg);
+    padding: 12px 16px;
+    margin-top: 1rem;
+  }
+  .batch-stats-inline { display: flex; gap: 16px; }
+  .bsi-item { display: flex; flex-direction: column; align-items: center; min-width: 44px; }
+  .bsi-num { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+  .bsi-label { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+  .batch-btn-group { display: flex; gap: 8px; margin-left: auto; }
+  .batch-btn-group .btn-run, .batch-btn-group .btn-clear { padding: 8px 16px; }
+
+  /* 일괄검수 케어번호 클릭 팝업 모달 */
+  .batch-detail-modal {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(40,32,20,0.45);
+    z-index: 100;
+    align-items: center; justify-content: center;
+    padding: 2rem;
+  }
+  .batch-detail-box {
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-lg);
+    width: 100%; max-width: 1280px;
+    max-height: 90vh;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .batch-detail-header {
+    background: var(--bg-primary);
+    padding: 1rem 1.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: var(--shadow-card-sm);
+  }
+  .batch-detail-careno { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-right: 10px; }
+  .batch-detail-title { font-size: 13px; color: var(--text-secondary); }
+  .batch-detail-close {
+    background: var(--bg-secondary); border: none; border-radius: 8px;
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--text-secondary); font-size: 16px;
+  }
+  .batch-detail-close:hover { background: var(--bg-tertiary); }
+  .batch-detail-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex: 1;
+  }
+  @media (max-width: 1200px) { .batch-detail-body .single-layout { grid-template-columns: 1fr; } }
 
   .result-empty {
     display: flex; flex-direction: column;
@@ -415,6 +524,8 @@
   .batch-table tr:last-child td { border-bottom: none; }
   .batch-table tr:hover td { background: var(--bg-secondary); }
   .batch-table .care-no { font-weight: 600; white-space: nowrap; }
+  .care-no-link { color: var(--blue-text); cursor: pointer; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px; }
+  .care-no-link:hover { color: #0C447C; }
   .batch-table .brand-col { color: var(--text-secondary); white-space: nowrap; }
   .batch-table .title-col { max-width: 180px; }
   .batch-table .body-col { max-width: 160px; }
@@ -567,8 +678,7 @@
   @keyframes spin { to { transform: rotate(360deg); } }
 
   @media (max-width: 768px) {
-    .layout { grid-template-columns: 1fr; }
-    .sidebar { position: static; height: auto; }
+    .three-panel { grid-template-columns: 1fr; }
     .main { padding: 1.25rem 1rem; }
   }
 </style>
@@ -596,134 +706,19 @@
 </div>
 
 <div class="layout">
-  <aside class="sidebar">
+  <div class="topbar">
     <div class="logo">
       <div class="logo-name">OCCC</div>
       <div class="logo-divider"></div>
       <div class="logo-sub">One-Click Care Check</div>
     </div>
-
-    <div id="sidebar-single">
-      <div class="form-group">
-        <label class="form-label">상품명 + 본문 내용</label>
-        <textarea id="inp-content" placeholder="상품명과 본문 내용을 함께 붙여넣으세요&#10;예) 샤넬 클래식 플랩백 M 블랙&#10;새상품 선물 받은 미사용 제품입니다..." style="min-height:220px"></textarea>
-      </div>
-      <button class="btn-run" id="btn-run" onclick="runAnalysis()">
-        <i class="ti ti-sparkles"></i> AI 검수 시작
-      </button>
-      <div style="height:6px"></div>
-      <button class="btn-clear" onclick="clearAll()">초기화</button>
-    </div>
-
-    <div id="sidebar-batch" style="display:none">
-      <div style="background:var(--bg-secondary);border-radius:var(--radius-md);padding:10px 12px;display:flex;flex-direction:column;gap:8px">
-        <div class="section-label" style="margin-bottom:0">진행 현황</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-          <div style="background:var(--bg-primary);border-radius:8px;padding:8px 10px;text-align:center">
-            <div style="font-size:18px;font-weight:700;color:var(--text-primary)" id="stat-total">—</div>
-            <div style="font-size:10px;color:var(--text-muted);margin-top:1px">전체</div>
-          </div>
-          <div style="background:var(--bg-primary);border-radius:8px;padding:8px 10px;text-align:center">
-            <div style="font-size:18px;font-weight:700;color:var(--green-text)" id="stat-done">—</div>
-            <div style="font-size:10px;color:var(--text-muted);margin-top:1px">완료</div>
-          </div>
-          <div style="background:var(--bg-primary);border-radius:8px;padding:8px 10px;text-align:center">
-            <div style="font-size:18px;font-weight:700;color:var(--accent)" id="stat-hold">—</div>
-            <div style="font-size:10px;color:var(--text-muted);margin-top:1px">자동보류</div>
-          </div>
-          <div style="background:var(--bg-primary);border-radius:8px;padding:8px 10px;text-align:center">
-            <div style="font-size:18px;font-weight:700;color:var(--red-text)" id="stat-error">—</div>
-            <div style="font-size:10px;color:var(--text-muted);margin-top:1px">오류</div>
-          </div>
-        </div>
-      </div>
-      <button class="btn-run" id="btn-batch" onclick="runBatch()" style="margin-top:4px">
-        <i class="ti ti-table-import"></i> 일괄 검수 시작
-      </button>
-      <div style="height:6px"></div>
-      <button class="btn-clear" id="btn-stop" onclick="stopBatch()" style="display:none;background:var(--red-bg);color:var(--red-text);border-color:var(--red-text)">
-        <i class="ti ti-player-stop" style="font-size:13px;vertical-align:-2px;margin-right:4px"></i> 중단
-      </button>
-      <button class="btn-clear" id="btn-export" onclick="exportCSV()" style="display:none">
-        <i class="ti ti-download" style="font-size:13px;vertical-align:-2px;margin-right:4px"></i> 결과 CSV 저장
+    <div style="display:flex;align-items:center;gap:14px">
+      <span style="font-size:10px; color:var(--text-muted); letter-spacing:0.05em;">v1.5.0 · 2026-06-22</span>
+      <button onclick="doLogout()" style="font-size:11px;color:var(--text-muted);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:3px;padding:4px 6px;border-radius:4px;transition:color .15s;" onmouseover="this.style.color='var(--red-text)'" onmouseout="this.style.color='var(--text-muted)'">
+        <i class="ti ti-logout" style="font-size:13px"></i> 로그아웃
       </button>
     </div>
-
-    <div id="history-section">
-      <div class="section-label" style="margin-bottom:.6rem">최근 검수 내역</div>
-      <div class="history-list" id="history-list">
-        <div class="history-empty">아직 검수 내역이 없습니다</div>
-      </div>
-    </div>
-
-    <div style="margin-top:auto;padding-top:1rem;border-top:0.5px solid var(--border-light)">
-      <div class="section-label" style="margin-bottom:.6rem">검수 항목 기준</div>
-      <div style="display:flex;flex-direction:column;gap:4px">
-        <div class="criteria-item" onclick="toggleCriteria(this)">
-          <div class="criteria-header"><span>모델명 / 색상 / 소재</span><i class="ti ti-chevron-down ci-arrow"></i></div>
-          <div class="criteria-body">브랜드명, 모델명, 색상, 소재 관련 표현 발췌<br>영문+한글 혼합 컬러명(스톰그레이 등) 포함</div>
-        </div>
-        <div class="criteria-item" onclick="toggleCriteria(this)">
-          <div class="criteria-header"><span>사이즈</span><i class="ti ti-chevron-down ci-arrow"></i></div>
-          <div class="criteria-body">사이즈·치수·호수 표현<br>숫자+기호만의 치수(60*24*26 등) 포함<br>MM·GM·PM·TPM·BB·NANO·MINI·SMALL·MEDIUM·LARGE 등 명품 사이즈명 포함</div>
-        </div>
-        <div class="criteria-item" onclick="toggleCriteria(this)">
-          <div class="criteria-header"><span>새상품 여부</span><i class="ti ti-chevron-down ci-arrow"></i></div>
-          <div class="criteria-body">새상품·미사용·미착용·선물·데드스톡 표현<br>해당 키워드 있을 때만 착용 횟수 표현 함께 발췌<br>부정 표현(안 신고·못 신고 등)은 발췌 제외<br>"거의 새상품·준새상품" 등 유사 표현은 ❌</div>
-        </div>
-        <div class="criteria-item" onclick="toggleCriteria(this)">
-          <div class="criteria-header"><span>제조 연식 각인 <span style="color:var(--text-muted);font-size:10px">(에·샤·롤)</span></span><i class="ti ti-chevron-down ci-arrow"></i></div>
-          <div class="criteria-body">에르메스·샤넬·롤렉스에 한해서만 적용<br>시리얼·제조년도·각인·날짜 관련 표현<br>다른 브랜드는 표현 있어도 ❌</div>
-        </div>
-        <div class="criteria-item" onclick="toggleCriteria(this)">
-          <div class="criteria-header"><span>기재 구성품</span><i class="ti ti-chevron-down ci-arrow"></i></div>
-          <div class="criteria-body">케이스·박스·보증서·쇼핑백·영수증·인보이스·택·더스트백·파우치·이너백·여분끈 등 관련 표현<br>"단품", "본품만" 등 구성품 없음 표현은 ❌</div>
-        </div>
-        <div class="criteria-item" onclick="toggleCriteria(this)">
-          <div class="criteria-header"><span>구성품 연식</span><i class="ti ti-chevron-down ci-arrow"></i></div>
-          <div class="criteria-body">조건 ① 구성품이 기재되어 있고<br>조건 ② 구매 연도/날짜 표현이 있을 때만 발췌<br>스탬핑 날짜(26년6월14일 등) 포함<br>둘 중 하나라도 없으면 ❌</div>
-        </div>
-        <div class="criteria-item" onclick="toggleCriteria(this)">
-          <div class="criteria-header"><span>수선 / 각인 여부</span><i class="ti ti-chevron-down ci-arrow"></i></div>
-          <div class="criteria-body">수선·수리·이니셜·각인·커스텀 관련 표현</div>
-        </div>
-        <div class="criteria-item" onclick="toggleCriteria(this)">
-          <div class="criteria-header"><span>하자 기재 여부</span><i class="ti ti-chevron-down ci-arrow"></i></div>
-          <div class="criteria-body">파손·찍힘·깨짐·찢김·변형 등<br>기능/형태에 영향을 주는 물리적 손상만<br>스크래치·변색·얼룩 등 외관 흔적은 ❌ (사용감 참고로)</div>
-        </div>
-        <div class="criteria-item" onclick="toggleCriteria(this)">
-          <div class="criteria-header"><span>사용감 참고</span><i class="ti ti-chevron-down ci-arrow"></i></div>
-          <div class="criteria-body">① 스크래치·마모·보풀·변색·얼룩 등 외관 사용 흔적<br>② 제품 소재·가공·디자인 특성 설명<br>(원래 디스트레스드 가공, 밑창이 원래 노란빛 등)</div>
-        </div>
-      </div>
-
-      <div class="section-label" style="margin-top:1rem;margin-bottom:.6rem">선판정 기준</div>
-      <div style="display:flex;flex-direction:column;gap:4px">
-        <div class="criteria-item" onclick="toggleCriteria(this)">
-          <div class="criteria-header"><span><span style="color:var(--red-text);font-weight:600;margin-right:4px">⚠</span>구성품 모호 표현 기재</span><i class="ti ti-chevron-down ci-arrow"></i></div>
-          <div class="criteria-body">풀구성·풀박스·풀세트·풀셋·다 가지고 있어요·구성 동일·구성 그대로 등<br>→ 자동 보류 처리</div>
-        </div>
-        <div class="criteria-item" onclick="toggleCriteria(this)">
-          <div class="criteria-header"><span><span style="color:var(--red-text);font-weight:600;margin-right:4px">⚠</span>사이즈 속성 vs 본문 불일치</span><i class="ti ti-chevron-down ci-arrow"></i></div>
-          <div class="criteria-body">속성값 사이즈와 본문 발췌 사이즈가 다를 때<br>속성값이 "기타(상품설명에 작성)" 계열이면 비교 제외<br>→ 자동 보류 처리</div>
-        </div>
-        <div class="criteria-item" onclick="toggleCriteria(this)">
-          <div class="criteria-header"><span><span style="color:var(--red-text);font-weight:600;margin-right:4px">⚠</span>의류·신발·모자 사이즈 미기재</span><i class="ti ti-chevron-down ci-arrow"></i></div>
-          <div class="criteria-body">의류·신발·모자 카테고리에서<br>속성 기타 계열이고 본문 사이즈도 없을 때<br>→ 자동 보류 처리</div>
-        </div>
-        <div class="criteria-item" onclick="toggleCriteria(this)">
-          <div class="criteria-header"><span><span style="color:#D9822B;font-weight:600;margin-right:4px">ℹ</span>새상품·미사용 기재 — 실물 확인</span><i class="ti ti-chevron-down ci-arrow"></i></div>
-          <div class="criteria-body">새상품·미사용·미착용 키워드가 본문 또는 속성에 있을 때<br>부정 표현(안 신고·못 신고 등), 완화 표현(거의 새상품·새상품급 등) 있으면 알림 억제<br>→ 검수자가 실물 보고 판단</div>
-        </div>
-      </div>
-    </div>
-  <div style="padding: 0.75rem 1.25rem; border-top: 0.5px solid var(--border-light); display:flex; align-items:center; justify-content:space-between;">
-    <span style="font-size:10px; color:var(--text-muted); letter-spacing:0.05em;">v1.4.0 · 2026-06-22</span>
-    <button onclick="doLogout()" style="font-size:10px;color:var(--text-muted);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:3px;padding:2px 4px;border-radius:4px;transition:color .15s;" onmouseover="this.style.color='var(--red-text)'" onmouseout="this.style.color='var(--text-muted)'">
-      <i class="ti ti-logout" style="font-size:12px"></i> 로그아웃
-    </button>
   </div>
-  </aside>
 
   <main class="main" style="padding:0;gap:0">
     <div class="tab-bar">
@@ -744,6 +739,18 @@
         <span class="status-badge s-idle" id="status-badge">대기 중</span>
       </div>
       <div class="single-layout">
+        <div class="input-card" id="input-card">
+          <div class="input-card-title"><i class="ti ti-file-text" style="color:var(--accent)"></i>상품명 + 본문 내용</div>
+          <textarea id="inp-content" placeholder="상품명과 본문 내용을 함께 붙여넣으세요&#10;예) 샤넬 클래식 플랩백 M 블랙&#10;새상품 선물 받은 미사용 제품입니다..." style="min-height:220px;flex:none"></textarea>
+          <div id="input-display" class="input-display" style="display:none"></div>
+          <div class="input-hl-hint" id="input-hl-hint" style="display:none">
+            <span class="swatch"></span>AI가 발췌한 부분이 본문에서 강조됩니다
+          </div>
+          <button class="btn-run" id="btn-run" onclick="runAnalysis()">
+            <i class="ti ti-sparkles"></i> AI 검수 시작
+          </button>
+          <button class="btn-clear" onclick="clearAll()">초기화</button>
+        </div>
         <div class="result-card" id="result-card">
           <div class="result-empty" id="result-empty">
             <i class="ti ti-file-search"></i>
@@ -760,6 +767,88 @@
             <p>AI 추출 완료 후<br>보류 사유 템플릿을 확인하세요</p>
           </div>
           <div id="judge-content" style="display:none"></div>
+        </div>
+      </div>
+
+      <div class="aux-row">
+        <div class="aux-card" id="history-section">
+          <div class="aux-card-title" onclick="toggleAux(this)">
+            <span><i class="ti ti-history" style="color:var(--accent)"></i> 최근 검수 내역</span>
+            <i class="ti ti-chevron-down aux-arrow"></i>
+          </div>
+          <div class="aux-card-body">
+            <div class="history-list" id="history-list">
+              <div class="history-empty">아직 검수 내역이 없습니다</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="aux-card">
+          <div class="aux-card-title" onclick="toggleAux(this)">
+            <span><i class="ti ti-list-check" style="color:var(--accent)"></i> 검수 항목 / 선판정 기준</span>
+            <i class="ti ti-chevron-down aux-arrow"></i>
+          </div>
+          <div class="aux-card-body">
+            <div class="section-label" style="margin-bottom:.6rem">검수 항목 기준</div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <div class="criteria-item" onclick="toggleCriteria(this)">
+                <div class="criteria-header"><span>모델명 / 색상 / 소재</span><i class="ti ti-chevron-down ci-arrow"></i></div>
+                <div class="criteria-body">브랜드명, 모델명, 색상, 소재 관련 표현 발췌<br>영문+한글 혼합 컬러명(스톰그레이 등) 포함</div>
+              </div>
+              <div class="criteria-item" onclick="toggleCriteria(this)">
+                <div class="criteria-header"><span>사이즈</span><i class="ti ti-chevron-down ci-arrow"></i></div>
+                <div class="criteria-body">사이즈·치수·호수 표현<br>숫자+기호만의 치수(60*24*26 등) 포함<br>MM·GM·PM·TPM·BB·NANO·MINI·SMALL·MEDIUM·LARGE 등 명품 사이즈명 포함</div>
+              </div>
+              <div class="criteria-item" onclick="toggleCriteria(this)">
+                <div class="criteria-header"><span>새상품 여부</span><i class="ti ti-chevron-down ci-arrow"></i></div>
+                <div class="criteria-body">새상품·미사용·미착용·선물·데드스톡 표현<br>해당 키워드 있을 때만 착용 횟수 표현 함께 발췌<br>부정 표현(안 신고·못 신고 등)은 발췌 제외<br>"거의 새상품·준새상품" 등 유사 표현은 ❌</div>
+              </div>
+              <div class="criteria-item" onclick="toggleCriteria(this)">
+                <div class="criteria-header"><span>제조 연식 각인 <span style="color:var(--text-muted);font-size:10px">(에·샤·롤)</span></span><i class="ti ti-chevron-down ci-arrow"></i></div>
+                <div class="criteria-body">에르메스·샤넬·롤렉스에 한해서만 적용<br>시리얼·제조년도·각인·날짜 관련 표현<br>다른 브랜드는 표현 있어도 ❌<br>샤넬 "OO번대", 에르메스 "O각인" 등 줄임 표현 포함</div>
+              </div>
+              <div class="criteria-item" onclick="toggleCriteria(this)">
+                <div class="criteria-header"><span>기재 구성품</span><i class="ti ti-chevron-down ci-arrow"></i></div>
+                <div class="criteria-body">케이스·박스·보증서·쇼핑백·영수증·인보이스·택·더스트백·파우치·이너백·여분끈 등 관련 표현<br>"단품", "본품만" 등 구성품 없음 표현은 ❌ (단, 다른 구성품 표현이 같은 본문에 있으면 정상 발췌)</div>
+              </div>
+              <div class="criteria-item" onclick="toggleCriteria(this)">
+                <div class="criteria-header"><span>구성품 연식</span><i class="ti ti-chevron-down ci-arrow"></i></div>
+                <div class="criteria-body">조건 ① 구성품이 기재되어 있고<br>조건 ② 구매 연도/날짜 표현이 있을 때만 발췌<br>스탬핑 날짜(26년6월14일 등) 포함<br>둘 중 하나라도 없으면 ❌</div>
+              </div>
+              <div class="criteria-item" onclick="toggleCriteria(this)">
+                <div class="criteria-header"><span>수선 / 각인 여부</span><i class="ti ti-chevron-down ci-arrow"></i></div>
+                <div class="criteria-body">수선·수리·이니셜·각인·커스텀 관련 표현</div>
+              </div>
+              <div class="criteria-item" onclick="toggleCriteria(this)">
+                <div class="criteria-header"><span>하자 기재 여부</span><i class="ti ti-chevron-down ci-arrow"></i></div>
+                <div class="criteria-body">파손·찍힘·깨짐·찢김·변형 등<br>기능/형태에 영향을 주는 물리적 손상만<br>스크래치·변색·얼룩 등 외관 흔적은 ❌ (사용감 참고로)</div>
+              </div>
+              <div class="criteria-item" onclick="toggleCriteria(this)">
+                <div class="criteria-header"><span>사용감 참고</span><i class="ti ti-chevron-down ci-arrow"></i></div>
+                <div class="criteria-body">① 스크래치·마모·보풀·변색·얼룩 등 외관 사용 흔적<br>② 제품 소재·가공·디자인 특성 설명<br>(원래 디스트레스드 가공, 밑창이 원래 노란빛 등)</div>
+              </div>
+            </div>
+
+            <div class="section-label" style="margin-top:1rem;margin-bottom:.6rem">선판정 기준</div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <div class="criteria-item" onclick="toggleCriteria(this)">
+                <div class="criteria-header"><span><span style="color:var(--red-text);font-weight:600;margin-right:4px">⚠</span>구성품 모호 표현 기재</span><i class="ti ti-chevron-down ci-arrow"></i></div>
+                <div class="criteria-body">풀구성·풀박스·풀세트·풀셋·다 가지고 있어요·구성 동일·구성 그대로 등<br>→ 자동 보류 처리</div>
+              </div>
+              <div class="criteria-item" onclick="toggleCriteria(this)">
+                <div class="criteria-header"><span><span style="color:var(--red-text);font-weight:600;margin-right:4px">⚠</span>사이즈 속성 vs 본문 불일치</span><i class="ti ti-chevron-down ci-arrow"></i></div>
+                <div class="criteria-body">속성값 사이즈와 본문 발췌 사이즈가 다를 때<br>속성값이 "기타(상품설명에 작성)" 계열이면 비교 제외<br>→ 자동 보류 처리</div>
+              </div>
+              <div class="criteria-item" onclick="toggleCriteria(this)">
+                <div class="criteria-header"><span><span style="color:var(--red-text);font-weight:600;margin-right:4px">⚠</span>의류·신발·모자 사이즈 미기재</span><i class="ti ti-chevron-down ci-arrow"></i></div>
+                <div class="criteria-body">의류·신발·모자 카테고리에서<br>속성 기타 계열이고 본문 사이즈도 없을 때<br>→ 자동 보류 처리</div>
+              </div>
+              <div class="criteria-item" onclick="toggleCriteria(this)">
+                <div class="criteria-header"><span><span style="color:#D9822B;font-weight:600;margin-right:4px">ℹ</span>새상품·미사용 기재 — 실물 확인</span><i class="ti ti-chevron-down ci-arrow"></i></div>
+                <div class="criteria-body">새상품·미사용·미착용 키워드가 본문 또는 속성에 있을 때<br>부정 표현(안 신고·못 신고 등), 완화 표현(거의 새상품·새상품급 등) 있으면 알림 억제<br>→ 검수자가 실물 보고 판단</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -783,12 +872,31 @@
         <div id="csv-info" style="display:none;font-size:12px;color:var(--text-secondary);padding:8px 4px"></div>
       </div>
 
-      <div id="batch-progress-wrap" style="display:none">
-        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-secondary);margin-bottom:6px">
-          <span id="batch-progress-label">준비 중...</span>
-          <span id="batch-progress-pct">0%</span>
+      <div class="batch-controls-bar">
+        <div class="batch-stats-inline">
+          <div class="bsi-item"><span class="bsi-num" id="stat-total">—</span><span class="bsi-label">전체</span></div>
+          <div class="bsi-item"><span class="bsi-num" id="stat-done" style="color:var(--green-text)">—</span><span class="bsi-label">완료</span></div>
+          <div class="bsi-item"><span class="bsi-num" id="stat-hold" style="color:var(--accent)">—</span><span class="bsi-label">자동보류</span></div>
+          <div class="bsi-item"><span class="bsi-num" id="stat-error" style="color:var(--red-text)">—</span><span class="bsi-label">오류</span></div>
         </div>
-        <div class="batch-progress-bar"><div class="batch-progress-fill" id="batch-progress-fill" style="width:0%"></div></div>
+        <div id="batch-progress-wrap" style="display:none;flex:1;min-width:160px">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-secondary);margin-bottom:4px">
+            <span id="batch-progress-label">준비 중...</span>
+            <span id="batch-progress-pct">0%</span>
+          </div>
+          <div class="batch-progress-bar"><div class="batch-progress-fill" id="batch-progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="batch-btn-group">
+          <button class="btn-run" id="btn-batch" onclick="runBatch()" style="width:auto;white-space:nowrap">
+            <i class="ti ti-table-import"></i> 일괄 검수 시작
+          </button>
+          <button class="btn-clear" id="btn-stop" onclick="stopBatch()" style="display:none;width:auto;white-space:nowrap;background:var(--red-bg);color:var(--red-text);border-color:var(--red-text)">
+            <i class="ti ti-player-stop" style="font-size:13px;vertical-align:-2px;margin-right:4px"></i> 중단
+          </button>
+          <button class="btn-clear" id="btn-export" onclick="exportCSV()" style="display:none;width:auto;white-space:nowrap">
+            <i class="ti ti-download" style="font-size:13px;vertical-align:-2px;margin-right:4px"></i> 결과 CSV 저장
+          </button>
+        </div>
       </div>
 
       <div id="batch-result-area" style="display:none">
@@ -821,6 +929,37 @@
   </main>
 </div>
 
+<!-- 일괄검수 케어번호 클릭 팝업 -->
+<div class="batch-detail-modal" id="batch-detail-modal" onclick="if(event.target===this)closeBatchDetail()">
+  <div class="batch-detail-box">
+    <div class="batch-detail-header">
+      <div>
+        <span class="batch-detail-careno" id="bd-careno"></span>
+        <span class="batch-detail-title" id="bd-title"></span>
+      </div>
+      <button class="batch-detail-close" onclick="closeBatchDetail()" aria-label="닫기">
+        <i class="ti ti-x" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div class="batch-detail-body">
+      <div class="single-layout" style="margin:0">
+        <div class="input-card">
+          <div class="input-card-title"><i class="ti ti-file-text" style="color:var(--accent)"></i>상품명 + 본문 내용</div>
+          <div class="input-display" id="bd-input-display" style="display:block"></div>
+          <div class="input-hl-hint"><span class="swatch"></span>AI가 발췌한 부분이 본문에서 강조됩니다</div>
+        </div>
+        <div class="result-card">
+          <div id="bd-result-content" style="display:none"></div>
+        </div>
+        <div class="judge-card">
+          <div class="judge-card-title"><i class="ti ti-template"></i> 실물 비교 후 판정 예시</div>
+          <div id="bd-judge-content" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   const CRITERIA = [
     "모델명 / 색상 / 소재",
@@ -847,6 +986,9 @@
 
   function clearAll() {
     document.getElementById('inp-content').value = '';
+    document.getElementById('inp-content').style.display = '';
+    document.getElementById('input-display').style.display = 'none';
+    document.getElementById('input-hl-hint').style.display = 'none';
     document.getElementById('result-empty').style.display  = 'flex';
     document.getElementById('result-empty').innerHTML =
       '<i class="ti ti-file-search"></i><p>상품명과 본문을 입력하고<br>AI 검수 시작 버튼을 눌러주세요</p>';
@@ -876,14 +1018,16 @@
     document.getElementById('inp-content').value = h.content;
     const mismatch = checkAttrMismatch({ sizeAttr: '', statusAttr: '', category: '', title: '' }, h.parsed);
     renderParsed(h.parsed, h.raw, mismatch);
+    renderInputHighlight(h.content, h.parsed);
     setStatus('s-done', '검수 완료');
   }
 
-  function renderParsed(items, raw, mismatch) {
+  function renderParsed(items, raw, mismatch, targetId) {
+    targetId = targetId || 'result-content';
     mismatch = mismatch || {};
     const pass = items.filter(i => i.found).length;
     const fail = items.length - pass;
-    setMetrics(items.length, pass, fail);
+    if (targetId === 'result-content') setMetrics(items.length, pass, fail);
 
     const itemsHtml = items.map((item, idx) => {
       const bullets = (item.details && item.details.length)
@@ -908,8 +1052,10 @@
       `;
     }).join('');
 
-    document.getElementById('result-empty').style.display = 'none';
-    const rc = document.getElementById('result-content');
+    const rc = document.getElementById(targetId);
+    if (targetId === 'result-content') {
+      document.getElementById('result-empty').style.display = 'none';
+    }
     rc.style.display = 'block';
     rc.innerHTML = `
       <div class="result-banner">
@@ -919,7 +1065,7 @@
       <ul class="result-list">${itemsHtml}</ul>
     `;
 
-    renderJudgePanel(items);
+    if (targetId === 'result-content') renderJudgePanel(items);
   }
 
   const HOLD_TEMPLATES = {
@@ -961,9 +1107,13 @@
     ]
   };
 
-  function renderJudgePanel(items) {
-    document.getElementById('judge-empty').style.display = 'none';
-    const jc = document.getElementById('judge-content');
+  function renderJudgePanel(items, targetId, idPrefix) {
+    targetId = targetId || 'judge-content';
+    idPrefix = idPrefix || 'j';
+    if (targetId === 'judge-content') {
+      document.getElementById('judge-empty').style.display = 'none';
+    }
+    const jc = document.getElementById(targetId);
     jc.style.display = 'block';
 
     const judgeItems = items
@@ -971,8 +1121,8 @@
       .map((item, i) => {
         const tmpls = HOLD_TEMPLATES[item.label] || [];
         const tmplRows = tmpls.map((t, ti) => {
-          const dataId = `jdata_${i}_${ti}`;
-          const btnId  = `jbtn_${i}_${ti}`;
+          const dataId = `${idPrefix}data_${i}_${ti}`;
+          const btnId  = `${idPrefix}btn_${i}_${ti}`;
           return `
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;background:var(--bg-secondary);border-radius:var(--radius-md);margin-top:6px">
               <span id="${dataId}" data-value="${escHtml(t.value)}" style="font-size:11px;color:var(--text-secondary);line-height:1.5;flex:1">${escHtml(t.value)}</span>
@@ -981,8 +1131,8 @@
               </button>
             </div>`;
         }).join('');
-        const panelId = `jtmpl_${i}`;
-        const toggleId = `jtoggle_${i}`;
+        const panelId = `${idPrefix}tmpl_${i}`;
+        const toggleId = `${idPrefix}toggle_${i}`;
         return `
           <div class="judge-item">
             <div class="judge-header">
@@ -1137,6 +1287,7 @@
       renderHistory();
 
       renderParsed(parsed, raw, mismatch);
+      renderInputHighlight(content, parsed);
       setStatus('s-done', '검수 완료');
 
     } catch (e) {
@@ -1160,14 +1311,63 @@
       .replace(/"/g, '&quot;');
   }
 
+  /* AI가 발췌한 문장들을 입력 본문 위에 하이라이트로 표시.
+     원본 텍스트는 건드리지 않고, 화면 표시용 div에만 마크업을 입힌다. */
+  function renderInputHighlight(content, parsed) {
+    const ta = document.getElementById('inp-content');
+    const display = document.getElementById('input-display');
+    const hint = document.getElementById('input-hl-hint');
+
+    // 모든 발췌 문장을 모아 길이 내림차순 정렬 (긴 문장을 먼저 매칭해야 겹침 방지)
+    let phrases = [];
+    parsed.forEach(item => {
+      (item.details || []).forEach(d => {
+        const trimmed = (d || '').trim();
+        if (trimmed && trimmed.length >= 2) phrases.push(trimmed);
+      });
+    });
+    phrases = [...new Set(phrases)].sort((a, b) => b.length - a.length);
+
+    if (!phrases.length) {
+      ta.style.display = '';
+      display.style.display = 'none';
+      hint.style.display = 'none';
+      return;
+    }
+
+    // 텍스트를 토큰(일반 텍스트 / 하이라이트 대상)으로 분할
+    let segments = [{ text: content, hl: false }];
+    phrases.forEach(phrase => {
+      const next = [];
+      segments.forEach(seg => {
+        if (seg.hl) { next.push(seg); return; }
+        const idx = seg.text.indexOf(phrase);
+        if (idx === -1) { next.push(seg); return; }
+        const before = seg.text.slice(0, idx);
+        const match  = seg.text.slice(idx, idx + phrase.length);
+        const after  = seg.text.slice(idx + phrase.length);
+        if (before) next.push({ text: before, hl: false });
+        next.push({ text: match, hl: true });
+        if (after) next.push({ text: after, hl: false });
+      });
+      segments = next;
+    });
+
+    const html = segments.map(seg =>
+      seg.hl ? `<span class="input-hl">${escHtml(seg.text)}</span>` : escHtml(seg.text)
+    ).join('');
+
+    display.innerHTML = html;
+    ta.style.display = 'none';
+    display.style.display = 'block';
+    hint.style.display = 'flex';
+  }
+
   function switchTab(tab) {
     document.getElementById('tab-single').classList.toggle('active', tab === 'single');
     document.getElementById('tab-batch').classList.toggle('active', tab === 'batch');
     document.getElementById('tab-single-btn').classList.toggle('active', tab === 'single');
     document.getElementById('tab-batch-btn').classList.toggle('active', tab === 'batch');
-    document.getElementById('sidebar-single').style.display  = tab === 'single' ? '' : 'none';
-    document.getElementById('sidebar-batch').style.display   = tab === 'batch'  ? '' : 'none';
-    document.getElementById('history-section').style.display = tab === 'single' ? '' : 'none';
   }
 
   let csvRows = [];
@@ -1419,7 +1619,7 @@
         return `<td class="${cellClass}">${icon}${detailHtml}${warnHtml}${tmplHtml}</td>`;
       });
       tr.innerHTML = `
-        <td class="care-no">${escHtml(row.careNo)}</td>
+        <td class="care-no"><span class="care-no-link" onclick="openBatchDetail(${batchResults.length - 1})">${escHtml(row.careNo)}</span></td>
         <td class="brand-col">${escHtml(row.brand)}</td>
         <td class="title-col">${escHtml(row.title)}</td>
         <td class="body-col">${row.body.length > 40
@@ -1601,6 +1801,10 @@
     el.classList.toggle('open');
   }
 
+  function toggleAux(titleEl) {
+    titleEl.closest('.aux-card').classList.toggle('open');
+  }
+
   /* ── 선판정 로직 ──────────────────────────────────────────
      원칙: AI 발췌 결과(parsed)는 절대 수정하지 않는다.
            이 함수는 오직 "읽기"만 하고, 참고용 신호(flags)를
@@ -1777,6 +1981,61 @@
     const a = document.createElement('a');
     a.href = url; a.download = `검수결과_${new Date().toISOString().slice(0,10)}.csv`;
     a.click(); URL.revokeObjectURL(url);
+  }
+
+  /* ── 일괄검수 케어번호 클릭 시 개별검수 결과창 팝업 ── */
+  function openBatchDetail(resultIdx) {
+    const r = batchResults[resultIdx];
+    if (!r) return;
+
+    document.getElementById('bd-careno').textContent = r.careNo || '—';
+    document.getElementById('bd-title').textContent = r.title || '(상품명 없음)';
+
+    // 입력 본문 + 하이라이트
+    const bdInput = document.getElementById('bd-input-display');
+    const combined = r.title ? `${r.title}\n${r.body}` : r.body;
+    let phrases = [];
+    r.parsed.forEach(item => {
+      (item.details || []).forEach(d => {
+        const trimmed = (d || '').trim();
+        if (trimmed && trimmed.length >= 2) phrases.push(trimmed);
+      });
+    });
+    phrases = [...new Set(phrases)].sort((a, b) => b.length - a.length);
+
+    let segments = [{ text: combined, hl: false }];
+    phrases.forEach(phrase => {
+      const next = [];
+      segments.forEach(seg => {
+        if (seg.hl) { next.push(seg); return; }
+        const idx = seg.text.indexOf(phrase);
+        if (idx === -1) { next.push(seg); return; }
+        const before = seg.text.slice(0, idx);
+        const match  = seg.text.slice(idx, idx + phrase.length);
+        const after  = seg.text.slice(idx + phrase.length);
+        if (before) next.push({ text: before, hl: false });
+        next.push({ text: match, hl: true });
+        if (after) next.push({ text: after, hl: false });
+      });
+      segments = next;
+    });
+    bdInput.innerHTML = segments.map(seg =>
+      seg.hl ? `<span class="input-hl">${escHtml(seg.text)}</span>` : escHtml(seg.text)
+    ).join('');
+
+    // AI 추출 결과
+    renderParsed(r.parsed, r.raw, r.mismatch, 'bd-result-content');
+
+    // 판정 패널
+    renderJudgePanel(r.parsed, 'bd-judge-content', 'bd');
+
+    document.getElementById('batch-detail-modal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeBatchDetail() {
+    document.getElementById('batch-detail-modal').style.display = 'none';
+    document.body.style.overflow = '';
   }
 </script>
 </body>
