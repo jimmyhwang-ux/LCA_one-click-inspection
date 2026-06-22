@@ -713,12 +713,12 @@
         </div>
         <div class="criteria-item" onclick="toggleCriteria(this)">
           <div class="criteria-header"><span><span style="color:#D9822B;font-weight:600;margin-right:4px">ℹ</span>새상품·미사용 기재 — 실물 확인</span><i class="ti ti-chevron-down ci-arrow"></i></div>
-          <div class="criteria-body">새상품·미사용·미착용 키워드가 본문 또는 속성에 있을 때<br>부정 표현(안 신고·못 신고 등) 있으면 알림 억제<br>→ 검수자가 실물 보고 판단</div>
+          <div class="criteria-body">새상품·미사용·미착용 키워드가 본문 또는 속성에 있을 때<br>부정 표현(안 신고·못 신고 등), 완화 표현(거의 새상품·새상품급 등) 있으면 알림 억제<br>→ 검수자가 실물 보고 판단</div>
         </div>
       </div>
     </div>
   <div style="padding: 0.75rem 1.25rem; border-top: 0.5px solid var(--border-light); display:flex; align-items:center; justify-content:space-between;">
-    <span style="font-size:10px; color:var(--text-muted); letter-spacing:0.05em;">v1.2.1 · 2026-06-22</span>
+    <span style="font-size:10px; color:var(--text-muted); letter-spacing:0.05em;">v1.2.2 · 2026-06-22</span>
     <button onclick="doLogout()" style="font-size:10px;color:var(--text-muted);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:3px;padding:2px 4px;border-radius:4px;transition:color .15s;" onmouseover="this.style.color='var(--red-text)'" onmouseout="this.style.color='var(--text-muted)'">
       <i class="ti ti-logout" style="font-size:12px"></i> 로그아웃
     </button>
@@ -1619,16 +1619,19 @@
       };
     }
 
-    /* ── 2. 새상품 여부: 본문 원문 직접 검색 + 부정 표현 억제 — 알림만, AI 발췌는 그대로 둠 ── */
+    /* ── 2. 새상품 여부: 본문 원문 직접 검색 + 부정/완화 표현 억제 — 알림만, AI 발췌는 그대로 둠 ── */
     const newKeywords      = ['새상품', '미사용', '미착용', '선물', '데드스톡', '새제품', '미개봉'];
     const negativePatterns = ['안 신고', '안신고', '못 신고', '못신고', '거의 안', '별로 안', '안 쓰고', '안쓰고', '안 입고', '안입고'];
+    // "거의 새상품", "준새상품", "새상품급" 등 완화 표현 — AI도 이런 표현은 새상품으로 발췌하지 않으므로 신호도 동일하게 억제
+    const nearNewPatterns = ['거의 새상품', '거의새상품', '준새상품', '준 새상품', '새상품급', '새상품 급', '새상품 수준', '새상품수준', '새상품 같은', '새상품같은', '새상품에 가까운', '새상품에 가깝'];
     const hasNewKeyword = newKeywords.some(kw => fullRaw.includes(kw));
     const hasNegative   = negativePatterns.some(p => fullRaw.includes(p));
+    const hasNearNew    = nearNewPatterns.some(p => fullRaw.includes(p));
     const gradeTablePattern = /[NSABC]\s*[:：]\s*(새상품|사용감|외관|하자|스크래치)/;
     const hasGradeTable = gradeTablePattern.test(fullRaw);
     const newInAttr = statusAttr.includes('새상품') || statusAttr.includes('미사용') || statusAttr.includes('미착용');
 
-    if ((newInAttr || hasNewKeyword) && !hasNegative && !hasGradeTable) {
+    if ((newInAttr || hasNewKeyword) && !hasNegative && !hasNearNew && !hasGradeTable) {
       flags[IDX_NEW] = {
         auto: false,
         result: '',
