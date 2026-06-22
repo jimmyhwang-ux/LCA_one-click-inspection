@@ -462,12 +462,34 @@
   .check-toggle-btn:hover { background: var(--bg-tertiary); }
   .check-toggle-btn.check-toggle-open { color: var(--text-secondary); }
 
-  .judge-reason-label {
-    font-size: 10.5px; font-weight: 600;
-    color: var(--accent);
-    background: var(--accent-soft-bg);
-    padding: 2px 8px; border-radius: 10px;
+  .judge-reason-row {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 10px 12px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    margin-bottom: 8px;
   }
+  .judge-reason-text {
+    flex: 1;
+    font-size: 12px; line-height: 1.6;
+    color: var(--text-primary);
+  }
+  .judge-reason-copy {
+    flex-shrink: 0;
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 10.5px; padding: 4px 9px;
+    border: 0.5px solid var(--border-mid); border-radius: var(--radius-md);
+    background: transparent; color: var(--text-secondary);
+    cursor: pointer; white-space: nowrap;
+  }
+  .judge-reason-remove {
+    flex-shrink: 0;
+    background: none; border: none; cursor: pointer;
+    color: var(--text-muted); font-size: 15px;
+    display: flex; align-items: center;
+    padding: 2px;
+  }
+  .judge-reason-remove:hover { color: var(--red-text); }
 
   .result-empty-inline {
     list-style: none;
@@ -765,7 +787,7 @@
       <div class="logo-sub">One-Click Care Check</div>
     </div>
     <div style="display:flex;align-items:center;gap:14px">
-      <span style="font-size:10px; color:var(--text-muted); letter-spacing:0.05em;">v1.7.0 · 2026-06-22</span>
+      <span style="font-size:10px; color:var(--text-muted); letter-spacing:0.05em;">v1.8.0 · 2026-06-22</span>
       <button onclick="doLogout()" style="font-size:11px;color:var(--text-muted);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:3px;padding:4px 6px;border-radius:4px;transition:color .15s;" onmouseover="this.style.color='var(--red-text)'" onmouseout="this.style.color='var(--text-muted)'">
         <i class="ti ti-logout" style="font-size:13px"></i> 로그아웃
       </button>
@@ -1073,14 +1095,20 @@
     const h = history[idx];
     document.getElementById('inp-content').value = h.content;
     const mismatch = checkAttrMismatch({ sizeAttr: '', statusAttr: '', category: '', title: '' }, h.parsed);
+
+    // 보류 사유 선택 목록 초기화 (이전 검수 내역의 선택이 남지 않도록)
+    delete judgeSelections['judge-content'];
+
     renderParsed(h.parsed, h.raw, mismatch);
     renderInputHighlight(h.content, h.parsed);
-    document.getElementById('judge-empty').style.display = 'flex';
-    document.getElementById('judge-empty').innerHTML =
-      '<i class="ti ti-clipboard-list"></i><p>항목 옆 보류 버튼을 클릭하고<br>사유를 선택하면 여기에 표시됩니다</p>';
-    document.getElementById('judge-content').style.display = 'none';
-    document.getElementById('judge-content').innerHTML = '';
-    delete judgeSelections['judge-content'];
+
+    if (!judgeSelections['judge-content'] || !judgeSelections['judge-content'].length) {
+      document.getElementById('judge-empty').style.display = 'flex';
+      document.getElementById('judge-empty').innerHTML =
+        '<i class="ti ti-clipboard-list"></i><p>항목 옆 보류 버튼을 클릭하고<br>사유를 선택하면 여기에 표시됩니다</p>';
+      document.getElementById('judge-content').style.display = 'none';
+      document.getElementById('judge-content').innerHTML = '';
+    }
     setStatus('s-done', '검수 완료');
   }
 
@@ -1130,7 +1158,6 @@
           <div class="result-item-header">
             <span class="result-name">${escHtml(item.label)}</span>
             <div style="display:flex;align-items:center;gap:6px">
-              <span class="result-badge ${item.found ? 'found' : 'notfound'}">${item.found ? '확인 필요' : '확인 불필요'}</span>
               ${holdBtn}
             </div>
           </div>
@@ -1184,6 +1211,27 @@
       ${foundSection}
       ${notFoundSection}
     `;
+
+    // 선판정에서 자동 보류 신호(auto:true)가 뜬 항목은 AI 검수 완료 시
+    // 검수자가 따로 보류 버튼을 누르지 않아도 보류 사유 패널에 자동으로 노출
+    const judgeTargetId = targetId === 'bd-result-content' ? 'bd-judge-content' : 'judge-content';
+    Object.keys(mismatch).forEach(idxStr => {
+      const idx = Number(idxStr);
+      const flag = mismatch[idx];
+      if (!flag || !flag.auto || !flag.tmplLabel) return;
+      const item = items[idx];
+      const tmpl = (HOLD_TEMPLATES[item.label] || []).find(t => t.label === flag.tmplLabel);
+      if (!tmpl) return;
+      const list = judgeSelections[judgeTargetId] || (judgeSelections[judgeTargetId] = []);
+      const key = `${item.label}__${tmpl.label}`;
+      if (!list.some(sel => sel.key === key)) {
+        list.push({ itemLabel: item.label, tmplLabel: tmpl.label, tmplValue: tmpl.value, key, auto: true });
+      }
+    });
+    if (judgeSelections[judgeTargetId] && judgeSelections[judgeTargetId].length) {
+      if (judgeTargetId === 'judge-content') document.getElementById('judge-empty').style.display = 'none';
+      renderJudgeList(judgeTargetId, idPrefix);
+    }
   }
 
   const parsedStore = {};
@@ -1237,7 +1285,7 @@
     const list = judgeSelections[judgeTargetId] || (judgeSelections[judgeTargetId] = []);
     const key = `${item.label}__${tmpl.label}`;
     if (!list.some(sel => sel.key === key)) {
-      list.push({ itemLabel: item.label, tmplLabel: tmpl.label, tmplValue: tmpl.value, key });
+      list.push({ itemLabel: item.label, tmplLabel: tmpl.label, tmplValue: tmpl.value, key, auto: false });
     }
     renderJudgeList(judgeTargetId, entry.idPrefix);
   }
@@ -1265,24 +1313,14 @@
       const btnId  = `${idPrefix}_sel_btn_${i}`;
       const safeKey = sel.key.replace(/'/g, "\\'");
       return `
-        <div class="judge-item" style="margin-bottom:8px">
-          <div class="judge-header">
-            <span class="judge-name">${escHtml(sel.itemLabel)}</span>
-            <div style="display:flex;align-items:center;gap:6px">
-              <span class="judge-reason-label">${escHtml(sel.tmplLabel)}</span>
-              <button onclick="removeJudgeSelection('${targetId}','${idPrefix}','${safeKey}')" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:14px;padding:0;display:flex" aria-label="제거">
-                <i class="ti ti-x" aria-hidden="true"></i>
-              </button>
-            </div>
-          </div>
-          <div style="padding:8px">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:9px 11px;background:var(--bg-secondary);border-radius:var(--radius-md)">
-              <span id="${dataId}" data-value="${escHtml(sel.tmplValue)}" style="font-size:12px;color:var(--text-secondary);line-height:1.6;flex:1">${escHtml(sel.tmplValue)}</span>
-              <button id="${btnId}" onclick="judgeCopyDirect('${btnId}','${dataId}')" style="flex-shrink:0;display:inline-flex;align-items:center;gap:3px;font-size:10.5px;padding:4px 9px;border:0.5px solid var(--border-mid);border-radius:var(--radius-md);background:transparent;color:var(--text-secondary);cursor:pointer;white-space:nowrap">
-                <i class="ti ti-clipboard" aria-hidden="true"></i> 복사
-              </button>
-            </div>
-          </div>
+        <div class="judge-reason-row">
+          <span id="${dataId}" data-value="${escHtml(sel.tmplValue)}" class="judge-reason-text">${escHtml(sel.tmplValue)}</span>
+          <button id="${btnId}" onclick="judgeCopyDirect('${btnId}','${dataId}')" class="judge-reason-copy">
+            <i class="ti ti-clipboard" aria-hidden="true"></i> 복사
+          </button>
+          <button onclick="removeJudgeSelection('${targetId}','${idPrefix}','${safeKey}')" class="judge-reason-remove" aria-label="제거">
+            <i class="ti ti-x" aria-hidden="true"></i>
+          </button>
         </div>`;
     }).join('');
   }
@@ -1435,6 +1473,7 @@
       '<i class="ti ti-loader-2" style="opacity:.4;font-size:32px;animation:spin .8s linear infinite"></i>' +
       '<p>AI가 항목을 분석하고 있습니다...</p>';
     setMetrics(null, null, null);
+    delete judgeSelections['judge-content'];
 
     try {
       const raw = await callAPI('', content);
@@ -2025,8 +2064,7 @@
     if (matchedVague) {
       flags[IDX_COMP] = {
         auto: true,
-        result: '보류',
-        reason: '구성품 확인 필요 > 구성품이 상품 설명과 같은지 확인 후 구매를 결정해 주세요.',
+        tmplLabel: "구성품 표기 모호 (풀구성 등)",
         warn: `구성품 모호 표현 기재 ("${matchedVague}") — 본문 직접 확인 필요`
       };
     }
@@ -2046,8 +2084,6 @@
     if ((newInAttr || hasNewKeyword) && !hasNegative && !hasNearNew && !hasGradeTable) {
       flags[IDX_NEW] = {
         auto: false,
-        result: '',
-        reason: '',
         warn: '새상품 기재 — 실물 확인 필요'
       };
     }
@@ -2076,8 +2112,7 @@
     if (sizeFlag) {
       flags[IDX_SIZE] = {
         auto: true,
-        result: '보류',
-        reason: '기타 > 입고된 상품의 사이즈를 확인해 주세요.',
+        tmplLabel: "사이즈 불일치",
         warn: sizeWarn
       };
     }
@@ -2087,8 +2122,7 @@
       if (sizeAttr.startsWith('기타') && !sizeItem.found) {
         flags[IDX_SIZE] = {
           auto: true,
-          result: '보류',
-          reason: '기타 > 입고된 상품의 사이즈를 확인해 주세요.',
+          tmplLabel: "속성 기타 + 본문 미기재",
           warn: '의류/신발/모자 — 속성 기타 + AI가 본문에서 사이즈를 찾지 못함'
         };
       }
@@ -2188,14 +2222,19 @@
       seg.hl ? `<span class="input-hl">${escHtml(seg.text)}</span>` : escHtml(seg.text)
     ).join('');
 
+    // 보류 사유 선택 목록 초기화 (이전 케어번호의 선택이 남지 않도록)
+    delete judgeSelections['bd-judge-content'];
+
     // AI 추출 결과 (idPrefix 'bd'로 모달 전용 store key 생성)
+    // renderParsed 내부에서 선판정 자동 보류 신호가 있으면 judgeSelections에 자동 채움
     renderParsed(r.parsed, r.raw, r.mismatch, 'bd-result-content', 'bd');
 
-    // 보류 사유는 보류 버튼 클릭 전까지 빈 상태로 초기화
-    delete judgeSelections['bd-judge-content'];
-    document.getElementById('bd-judge-content').innerHTML =
-      `<div class="judge-empty"><i class="ti ti-clipboard-list"></i><p>항목 옆 보류 버튼을 클릭하고<br>사유를 선택하면 여기에 표시됩니다</p></div>`;
-    document.getElementById('bd-judge-content').style.display = 'block';
+    // 자동으로 채워진 게 없으면 빈 안내 문구 표시
+    if (!judgeSelections['bd-judge-content'] || !judgeSelections['bd-judge-content'].length) {
+      document.getElementById('bd-judge-content').innerHTML =
+        `<div class="judge-empty"><i class="ti ti-clipboard-list"></i><p>항목 옆 보류 버튼을 클릭하고<br>사유를 선택하면 여기에 표시됩니다</p></div>`;
+      document.getElementById('bd-judge-content').style.display = 'block';
+    }
 
     document.getElementById('batch-detail-modal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
