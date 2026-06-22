@@ -424,27 +424,50 @@
   .result-badge.found { background: #E6EEF7; color: #1A5490; }
   .result-badge.notfound { background: var(--bg-tertiary); color: var(--text-muted); }
 
+  .hold-dd-wrap { position: relative; flex-shrink: 0; }
   .hold-btn {
     font-size: 10.5px; font-weight: 600;
     padding: 2px 9px; border-radius: 20px;
     background: var(--red-bg); color: var(--red-text);
     border: none; cursor: pointer;
     display: inline-flex; align-items: center; gap: 3px;
-    flex-shrink: 0;
     transition: opacity .15s;
   }
   .hold-btn:hover { opacity: .8; }
-  .hold-btn:disabled { opacity: .35; cursor: not-allowed; }
+  .hold-dd-menu {
+    position: absolute; top: calc(100% + 4px); right: 0;
+    background: var(--bg-primary);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.14);
+    border-radius: var(--radius-md);
+    padding: 4px;
+    min-width: 200px;
+    max-width: 260px;
+    z-index: 20;
+  }
+  .hold-dd-item {
+    font-size: 11.5px; color: var(--text-primary);
+    padding: 7px 10px; border-radius: 6px;
+    cursor: pointer; line-height: 1.4;
+  }
+  .hold-dd-item:hover { background: var(--bg-secondary); }
 
-  .notfound-toggle-row { margin-top: 10px; }
-  .notfound-toggle-btn {
-    font-size: 11px; color: var(--text-muted);
+  .check-toggle-row { margin-top: 10px; }
+  .check-toggle-btn {
+    font-size: 11px; color: var(--text-muted); font-weight: 600;
     background: var(--bg-secondary); border: none; border-radius: 8px;
     padding: 6px 12px; cursor: pointer;
     display: inline-flex; align-items: center; gap: 5px;
     width: 100%; justify-content: center;
   }
-  .notfound-toggle-btn:hover { background: var(--bg-tertiary); }
+  .check-toggle-btn:hover { background: var(--bg-tertiary); }
+  .check-toggle-btn.check-toggle-open { color: var(--text-secondary); }
+
+  .judge-reason-label {
+    font-size: 10.5px; font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-soft-bg);
+    padding: 2px 8px; border-radius: 10px;
+  }
 
   .result-empty-inline {
     list-style: none;
@@ -742,7 +765,7 @@
       <div class="logo-sub">One-Click Care Check</div>
     </div>
     <div style="display:flex;align-items:center;gap:14px">
-      <span style="font-size:10px; color:var(--text-muted); letter-spacing:0.05em;">v1.6.0 · 2026-06-22</span>
+      <span style="font-size:10px; color:var(--text-muted); letter-spacing:0.05em;">v1.7.0 · 2026-06-22</span>
       <button onclick="doLogout()" style="font-size:11px;color:var(--text-muted);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:3px;padding:4px 6px;border-radius:4px;transition:color .15s;" onmouseover="this.style.color='var(--red-text)'" onmouseout="this.style.color='var(--text-muted)'">
         <i class="ti ti-logout" style="font-size:13px"></i> 로그아웃
       </button>
@@ -793,7 +816,7 @@
           </div>
           <div class="judge-empty" id="judge-empty">
             <i class="ti ti-clipboard-list"></i>
-            <p>항목 옆 보류 버튼을 클릭하면<br>해당 항목의 판정 가이드가 표시됩니다</p>
+            <p>항목 옆 보류 버튼을 클릭하고<br>사유를 선택하면 여기에 표시됩니다</p>
           </div>
           <div id="judge-content" style="display:none"></div>
         </div>
@@ -1024,9 +1047,10 @@
     document.getElementById('result-content').style.display = 'none';
     document.getElementById('judge-empty').style.display = 'flex';
     document.getElementById('judge-empty').innerHTML =
-      '<i class="ti ti-clipboard-list"></i><p>항목 옆 보류 버튼을 클릭하면<br>해당 항목의 판정 가이드가 표시됩니다</p>';
+      '<i class="ti ti-clipboard-list"></i><p>항목 옆 보류 버튼을 클릭하고<br>사유를 선택하면 여기에 표시됩니다</p>';
     document.getElementById('judge-content').style.display = 'none';
     document.getElementById('judge-content').innerHTML = '';
+    delete judgeSelections['judge-content'];
     setStatus('s-idle', '대기 중');
     setMetrics(null, null, null);
   }
@@ -1053,9 +1077,10 @@
     renderInputHighlight(h.content, h.parsed);
     document.getElementById('judge-empty').style.display = 'flex';
     document.getElementById('judge-empty').innerHTML =
-      '<i class="ti ti-clipboard-list"></i><p>항목 옆 보류 버튼을 클릭하면<br>해당 항목의 판정 가이드가 표시됩니다</p>';
+      '<i class="ti ti-clipboard-list"></i><p>항목 옆 보류 버튼을 클릭하고<br>사유를 선택하면 여기에 표시됩니다</p>';
     document.getElementById('judge-content').style.display = 'none';
     document.getElementById('judge-content').innerHTML = '';
+    delete judgeSelections['judge-content'];
     setStatus('s-done', '검수 완료');
   }
 
@@ -1067,7 +1092,7 @@
     const fail = items.length - pass;
     if (targetId === 'result-content') setMetrics(items.length, pass, fail);
 
-    // 클릭 시 판정 가이드에서 즉시 조회할 수 있도록 항목 데이터를 저장
+    // 클릭 시 보류 사유에서 즉시 조회할 수 있도록 항목 데이터를 저장
     const storeKey = `${idPrefix}_${targetId}`;
     const isModal = targetId === 'bd-result-content';
     parsedStore[storeKey] = { items, idPrefix, targetId, isModal };
@@ -1082,11 +1107,22 @@
       const warnHtml = flag
         ? `<div style="margin-top:5px;font-size:11px;font-weight:600;color:${flag.auto ? 'var(--red-text)' : 'var(--accent)'};padding:4px 8px;background:${flag.auto ? 'var(--red-bg)' : 'var(--accent-soft-bg)'};border-radius:6px">${flag.auto ? '⚠ 자동 보류 — ' : 'ℹ '}${escHtml(flag.warn)}</div>`
         : '';
-      const hasTmpl = HOLD_TEMPLATES[item.label] && HOLD_TEMPLATES[item.label].length;
-      const holdBtn = item.found
-        ? `<button class="hold-btn" onclick="showJudgeFor('${storeKey}',${idx})" ${hasTmpl ? '' : 'disabled'}>
-             <i class="ti ti-flag" aria-hidden="true"></i> 보류
-           </button>`
+      const tmpls = HOLD_TEMPLATES[item.label] || [];
+      const ddId = `${idPrefix}_dd_${targetId}_${idx}`;
+      const holdBtn = item.found && tmpls.length
+        ? `
+          <div class="hold-dd-wrap" id="${ddId}_wrap">
+            <button class="hold-btn" onclick="toggleHoldDd('${ddId}')">
+              <i class="ti ti-flag" aria-hidden="true"></i> 보류${tmpls.length > 1 ? ` (${tmpls.length})` : ''}
+            </button>
+            <div class="hold-dd-menu" id="${ddId}" style="display:none">
+              ${tmpls.map((t, ti) => `
+                <div class="hold-dd-item" onclick="selectHoldReason('${storeKey}',${idx},${ti})">
+                  ${escHtml(t.label)}
+                </div>
+              `).join('')}
+            </div>
+          </div>`
         : '';
 
       return `
@@ -1094,7 +1130,7 @@
           <div class="result-item-header">
             <span class="result-name">${escHtml(item.label)}</span>
             <div style="display:flex;align-items:center;gap:6px">
-              <span class="result-badge ${item.found ? 'found' : 'notfound'}">${item.found ? '기재' : '미기재'}</span>
+              <span class="result-badge ${item.found ? 'found' : 'notfound'}">${item.found ? '확인 필요' : '확인 불필요'}</span>
               ${holdBtn}
             </div>
           </div>
@@ -1110,13 +1146,25 @@
       (item.found ? foundItems : notFoundItems).push(buildItem(item, idx));
     });
 
+    const foundPanelId = `${idPrefix}_f_${targetId}`;
+    const foundToggleId = `${idPrefix}_ft_${targetId}`;
     const notFoundPanelId = `${idPrefix}_nf_${targetId}`;
     const notFoundToggleId = `${idPrefix}_nft_${targetId}`;
+
+    const foundSection = `
+      <div class="check-toggle-row">
+        <button id="${foundToggleId}" class="check-toggle-btn check-toggle-open" onclick="toggleCheckSection('${foundPanelId}','${foundToggleId}','확인 필요')">
+          <i class="ti ti-chevron-up" aria-hidden="true"></i> 확인 필요 (${foundItems.length})
+        </button>
+      </div>
+      <ul class="result-list" id="${foundPanelId}" style="display:${foundItems.length ? 'block' : 'none'}">${foundItems.join('') || '<li class="result-empty-inline">확인이 필요한 항목이 없습니다</li>'}</ul>
+    `;
+
     const notFoundSection = notFoundItems.length
       ? `
-        <div class="notfound-toggle-row">
-          <button id="${notFoundToggleId}" class="notfound-toggle-btn" onclick="toggleNotFound('${notFoundPanelId}','${notFoundToggleId}')">
-            <i class="ti ti-chevron-down" aria-hidden="true"></i> 미기재 항목 보기 (${notFoundItems.length})
+        <div class="check-toggle-row">
+          <button id="${notFoundToggleId}" class="check-toggle-btn" onclick="toggleCheckSection('${notFoundPanelId}','${notFoundToggleId}','확인 불필요')">
+            <i class="ti ti-chevron-down" aria-hidden="true"></i> 확인 불필요 (${notFoundItems.length})
           </button>
         </div>
         <ul class="result-list" id="${notFoundPanelId}" style="display:none">${notFoundItems.join('')}</ul>
@@ -1133,67 +1181,117 @@
         <i class="ti ti-robot"></i>
         AI 추출 항목화 결과
       </div>
-      <ul class="result-list">${foundItems.join('') || '<li class="result-empty-inline">기재된 항목이 없습니다</li>'}</ul>
+      ${foundSection}
       ${notFoundSection}
     `;
   }
 
   const parsedStore = {};
 
-  function showJudgeFor(storeKey, idx) {
-    const entry = parsedStore[storeKey];
-    if (!entry) return;
-    const item = entry.items[idx];
-    if (!entry.isModal) document.getElementById('judge-empty').style.display = 'none';
-    renderJudgeSingle(item, entry.targetId === 'bd-result-content' ? 'bd-judge-content' : 'judge-content', entry.idPrefix);
-  }
-
-  function renderJudgeSingle(item, targetId, idPrefix) {
-    const jc = document.getElementById(targetId);
-    jc.style.display = 'block';
-    const tmpls = HOLD_TEMPLATES[item.label] || [];
-    if (!tmpls.length) {
-      jc.innerHTML = `<div class="judge-empty"><i class="ti ti-circle-check"></i><p>이 항목은 보류 템플릿이<br>준비되어 있지 않습니다</p></div>`;
-      return;
-    }
-    const rows = tmpls.map((t, ti) => {
-      const dataId = `${idPrefix}data_${ti}`;
-      const btnId  = `${idPrefix}btn_${ti}`;
-      return `
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;background:var(--bg-secondary);border-radius:var(--radius-md);margin-top:6px">
-          <span id="${dataId}" data-value="${escHtml(t.value)}" style="font-size:11px;color:var(--text-secondary);line-height:1.5;flex:1">${escHtml(t.value)}</span>
-          <button id="${btnId}" onclick="judgeCopyDirect('${btnId}','${dataId}')" style="flex-shrink:0;display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:3px 8px;border:0.5px solid var(--border-mid);border-radius:var(--radius-md);background:transparent;color:var(--text-secondary);cursor:pointer;white-space:nowrap">
-            <i class="ti ti-clipboard" aria-hidden="true"></i> 복사
-          </button>
-        </div>`;
-    }).join('');
-    jc.innerHTML = `
-      <div class="judge-item">
-        <div class="judge-header">
-          <span class="judge-name">${escHtml(item.label)}</span>
-        </div>
-        <div style="padding:4px 8px 8px">${rows}</div>
-      </div>`;
-  }
-
-  function toggleNotFound(panelId, toggleId) {
+  function toggleCheckSection(panelId, toggleId, label) {
     const panel = document.getElementById(panelId);
     const btn = document.getElementById(toggleId);
     if (!panel || !btn) return;
-    const isOpen = panel.style.display !== 'none';
     const count = panel.children.length;
+    const isOpen = panel.style.display !== 'none';
     if (isOpen) {
       panel.style.display = 'none';
-      btn.innerHTML = `<i class="ti ti-chevron-down" aria-hidden="true"></i> 미기재 항목 보기 (${count})`;
+      btn.classList.remove('check-toggle-open');
+      btn.innerHTML = `<i class="ti ti-chevron-down" aria-hidden="true"></i> ${label} (${count})`;
     } else {
       panel.style.display = 'block';
-      btn.innerHTML = `<i class="ti ti-chevron-up" aria-hidden="true"></i> 미기재 항목 접기`;
+      btn.classList.add('check-toggle-open');
+      btn.innerHTML = `<i class="ti ti-chevron-up" aria-hidden="true"></i> ${label} (${count})`;
     }
+  }
+
+  function toggleHoldDd(ddId) {
+    document.querySelectorAll('.hold-dd-menu').forEach(el => {
+      if (el.id !== ddId) el.style.display = 'none';
+    });
+    const menu = document.getElementById(ddId);
+    if (!menu) return;
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+  }
+
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.hold-dd-wrap')) {
+      document.querySelectorAll('.hold-dd-menu').forEach(el => el.style.display = 'none');
+    }
+  });
+
+  const judgeSelections = {}; // targetId -> [{ itemLabel, tmplLabel, tmplValue, key }]
+
+  function selectHoldReason(storeKey, idx, tmplIdx) {
+    const entry = parsedStore[storeKey];
+    if (!entry) return;
+    const item = entry.items[idx];
+    const tmpl = (HOLD_TEMPLATES[item.label] || [])[tmplIdx];
+    if (!tmpl) return;
+
+    document.querySelectorAll('.hold-dd-menu').forEach(el => el.style.display = 'none');
+
+    if (!entry.isModal) document.getElementById('judge-empty').style.display = 'none';
+    const judgeTargetId = entry.targetId === 'bd-result-content' ? 'bd-judge-content' : 'judge-content';
+
+    const list = judgeSelections[judgeTargetId] || (judgeSelections[judgeTargetId] = []);
+    const key = `${item.label}__${tmpl.label}`;
+    if (!list.some(sel => sel.key === key)) {
+      list.push({ itemLabel: item.label, tmplLabel: tmpl.label, tmplValue: tmpl.value, key });
+    }
+    renderJudgeList(judgeTargetId, entry.idPrefix);
+  }
+
+  function removeJudgeSelection(targetId, idPrefix, key) {
+    const list = judgeSelections[targetId];
+    if (!list) return;
+    judgeSelections[targetId] = list.filter(sel => sel.key !== key);
+    renderJudgeList(targetId, idPrefix);
+  }
+
+  function renderJudgeList(targetId, idPrefix) {
+    const jc = document.getElementById(targetId);
+    const list = judgeSelections[targetId] || [];
+
+    if (!list.length) {
+      jc.innerHTML = `<div class="judge-empty"><i class="ti ti-clipboard-list"></i><p>항목 옆 보류 버튼을 클릭하고<br>사유를 선택하면 여기에 표시됩니다</p></div>`;
+      jc.style.display = 'block';
+      return;
+    }
+
+    jc.style.display = 'block';
+    jc.innerHTML = list.map((sel, i) => {
+      const dataId = `${idPrefix}_sel_data_${i}`;
+      const btnId  = `${idPrefix}_sel_btn_${i}`;
+      const safeKey = sel.key.replace(/'/g, "\\'");
+      return `
+        <div class="judge-item" style="margin-bottom:8px">
+          <div class="judge-header">
+            <span class="judge-name">${escHtml(sel.itemLabel)}</span>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span class="judge-reason-label">${escHtml(sel.tmplLabel)}</span>
+              <button onclick="removeJudgeSelection('${targetId}','${idPrefix}','${safeKey}')" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:14px;padding:0;display:flex" aria-label="제거">
+                <i class="ti ti-x" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+          <div style="padding:8px">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:9px 11px;background:var(--bg-secondary);border-radius:var(--radius-md)">
+              <span id="${dataId}" data-value="${escHtml(sel.tmplValue)}" style="font-size:12px;color:var(--text-secondary);line-height:1.6;flex:1">${escHtml(sel.tmplValue)}</span>
+              <button id="${btnId}" onclick="judgeCopyDirect('${btnId}','${dataId}')" style="flex-shrink:0;display:inline-flex;align-items:center;gap:3px;font-size:10.5px;padding:4px 9px;border:0.5px solid var(--border-mid);border-radius:var(--radius-md);background:transparent;color:var(--text-secondary);cursor:pointer;white-space:nowrap">
+                <i class="ti ti-clipboard" aria-hidden="true"></i> 복사
+              </button>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
   }
 
   const HOLD_TEMPLATES = {
     "모델명 / 색상 / 소재": [
-      { label: "모델명·색상·소재 불일치", value: "보류 > 본문 상품정보와 불일치 > 해당 템플릿 체크" },
+      { label: "모델명 불일치", value: "보류 > 본문 상품정보와 불일치 > 상품 설명에 기재된 모델명 : [텍스트], 실제 도착한 상품의 모델명 : [텍스트]" },
+      { label: "색상 불일치", value: "보류 > 본문 상품정보와 불일치 > 상품 설명에 기재된 색상 : [텍스트], 실제 도착한 상품의 색상 : [텍스트]" },
+      { label: "소재 불일치 (멀티소재 일부만 일치)", value: "보류 > 본문 상품정보와 불일치 > 상품 설명에 기재된 소재 : [텍스트], 실제 도착한 상품의 소재 : [텍스트]" },
       { label: "모호하거나 확인 불가", value: "보류 > 기타 > 입고된 상품의 [텍스트]를 확인해주세요." }
     ],
     "사이즈": [
@@ -2093,9 +2191,10 @@
     // AI 추출 결과 (idPrefix 'bd'로 모달 전용 store key 생성)
     renderParsed(r.parsed, r.raw, r.mismatch, 'bd-result-content', 'bd');
 
-    // 판정 가이드는 보류 버튼 클릭 전까지 빈 상태로 초기화
+    // 보류 사유는 보류 버튼 클릭 전까지 빈 상태로 초기화
+    delete judgeSelections['bd-judge-content'];
     document.getElementById('bd-judge-content').innerHTML =
-      `<div class="judge-empty"><i class="ti ti-clipboard-list"></i><p>항목 옆 보류 버튼을 클릭하면<br>해당 항목의 판정 가이드가 표시됩니다</p></div>`;
+      `<div class="judge-empty"><i class="ti ti-clipboard-list"></i><p>항목 옆 보류 버튼을 클릭하고<br>사유를 선택하면 여기에 표시됩니다</p></div>`;
     document.getElementById('bd-judge-content').style.display = 'block';
 
     document.getElementById('batch-detail-modal').style.display = 'flex';
