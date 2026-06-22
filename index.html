@@ -718,7 +718,7 @@
       </div>
     </div>
   <div style="padding: 0.75rem 1.25rem; border-top: 0.5px solid var(--border-light); display:flex; align-items:center; justify-content:space-between;">
-    <span style="font-size:10px; color:var(--text-muted); letter-spacing:0.05em;">v1.3.0 · 2026-06-22</span>
+    <span style="font-size:10px; color:var(--text-muted); letter-spacing:0.05em;">v1.4.0 · 2026-06-22</span>
     <button onclick="doLogout()" style="font-size:10px;color:var(--text-muted);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:3px;padding:2px 4px;border-radius:4px;transition:color .15s;" onmouseover="this.style.color='var(--red-text)'" onmouseout="this.style.color='var(--text-muted)'">
       <i class="ti ti-logout" style="font-size:12px"></i> 로그아웃
     </button>
@@ -981,18 +981,36 @@
               </button>
             </div>`;
         }).join('');
+        const panelId = `jtmpl_${i}`;
+        const toggleId = `jtoggle_${i}`;
         return `
           <div class="judge-item">
             <div class="judge-header">
               <span class="judge-name">${escHtml(item.label)}</span>
+              <button id="${toggleId}" onclick="toggleJudgeTmpl('${panelId}','${toggleId}')" style="font-size:10.5px;color:var(--accent);background:var(--accent-soft-bg);border:none;border-radius:6px;padding:3px 8px;cursor:pointer;display:inline-flex;align-items:center;gap:3px">
+                <i class="ti ti-chevron-down" aria-hidden="true"></i> 보류 사유 보기 (${tmpls.length})
+              </button>
             </div>
-            <div style="padding:4px 8px 8px">${tmplRows}</div>
+            <div id="${panelId}" style="display:none;padding:4px 8px 8px">${tmplRows}</div>
           </div>`;
       }).join('');
 
     jc.innerHTML = judgeItems
       ? `<div class="judge-list">${judgeItems}</div>`
       : `<div class="judge-empty"><i class="ti ti-circle-check"></i><p>보류 템플릿 대상 항목이<br>없습니다</p></div>`;
+  }
+
+  function toggleJudgeTmpl(panelId, toggleId) {
+    const panel = document.getElementById(panelId);
+    const btn = document.getElementById(toggleId);
+    const isOpen = panel.style.display !== 'none';
+    if (isOpen) {
+      panel.style.display = 'none';
+      btn.innerHTML = `<i class="ti ti-chevron-down" aria-hidden="true"></i> 보류 사유 보기 (${panel.children.length})`;
+    } else {
+      panel.style.display = 'block';
+      btn.innerHTML = `<i class="ti ti-chevron-up" aria-hidden="true"></i> 보류 사유 접기 (${panel.children.length})`;
+    }
   }
 
   function judgeCopyDirect(btnId, dataId) {
@@ -1377,7 +1395,8 @@
         const tmplOpts = HOLD_TEMPLATES[item.label];
         let tmplHtml = '';
         if (item.found && tmplOpts && tmplOpts.length) {
-          // 개별검수와 동일하게 — 각 템플릿을 바로 나열하고 복사 버튼
+          const panelId = `btmpl_${idx}_${i}`;
+          const toggleId = `btoggle_${idx}_${i}`;
           const rows = tmplOpts.map((t, ti) => {
             const dataId = `bdata_${idx}_${i}_${ti}`;
             const btnId  = `bbtn_${idx}_${i}_${ti}`;
@@ -1389,7 +1408,13 @@
                 </button>
               </div>`;
           }).join('');
-          tmplHtml = `<div style="margin-top:4px">${rows}</div>`;
+          tmplHtml = `
+            <div style="margin-top:4px">
+              <button id="${toggleId}" onclick="toggleBatchTmpl('${panelId}','${toggleId}')" style="font-size:10px;color:var(--accent);background:var(--accent-soft-bg);border:none;border-radius:6px;padding:2px 7px;cursor:pointer;display:inline-flex;align-items:center;gap:2px;white-space:nowrap">
+                <i class="ti ti-chevron-down" aria-hidden="true"></i> 보류 사유 (${tmplOpts.length})
+              </button>
+              <div id="${panelId}" style="display:none">${rows}</div>
+            </div>`;
         }
         return `<td class="${cellClass}">${icon}${detailHtml}${warnHtml}${tmplHtml}</td>`;
       });
@@ -1555,6 +1580,21 @@
         btn.style.borderColor = '';
       }, 1800);
     });
+  }
+
+  function toggleBatchTmpl(panelId, toggleId) {
+    const panel = document.getElementById(panelId);
+    const btn = document.getElementById(toggleId);
+    if (!panel || !btn) return;
+    const count = panel.children.length;
+    const isOpen = panel.style.display !== 'none';
+    if (isOpen) {
+      panel.style.display = 'none';
+      btn.innerHTML = `<i class="ti ti-chevron-down" aria-hidden="true"></i> 보류 사유 (${count})`;
+    } else {
+      panel.style.display = 'block';
+      btn.innerHTML = `<i class="ti ti-chevron-up" aria-hidden="true"></i> 보류 사유 접기`;
+    }
   }
 
   function toggleCriteria(el) {
