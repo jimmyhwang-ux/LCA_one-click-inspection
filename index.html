@@ -718,7 +718,7 @@
       </div>
     </div>
   <div style="padding: 0.75rem 1.25rem; border-top: 0.5px solid var(--border-light); display:flex; align-items:center; justify-content:space-between;">
-    <span style="font-size:10px; color:var(--text-muted); letter-spacing:0.05em;">v1.2.4 · 2026-06-22</span>
+    <span style="font-size:10px; color:var(--text-muted); letter-spacing:0.05em;">v1.3.0 · 2026-06-22</span>
     <button onclick="doLogout()" style="font-size:10px;color:var(--text-muted);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:3px;padding:2px 4px;border-radius:4px;transition:color .15s;" onmouseover="this.style.color='var(--red-text)'" onmouseout="this.style.color='var(--text-muted)'">
       <i class="ti ti-logout" style="font-size:12px"></i> 로그아웃
     </button>
@@ -1335,7 +1335,10 @@
       let parsed = null;
       let mismatch = {};
       try {
-        const raw = await callAPI(row.title, row.body, row.category);
+        // 개별 검수와 동일한 입력 형태로 통일: title을 따로 보내지 않고
+        // content 하나로 미리 합쳐서 전달 (AI가 받는 텍스트 구조를 완전히 일치시킴)
+        const combinedContent = row.title ? `${row.title}\n${row.body}` : row.body;
+        const raw = await callAPI('', combinedContent, row.category);
         parsed = parseResponse(raw);
         mismatch = checkAttrMismatch(row, parsed);
         batchResults.push({ ...row, parsed, raw, mismatch, ok: true });
