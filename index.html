@@ -677,7 +677,7 @@
         </div>
         <div class="criteria-item" onclick="toggleCriteria(this)">
           <div class="criteria-header"><span>기재 구성품</span><i class="ti ti-chevron-down ci-arrow"></i></div>
-          <div class="criteria-body">케이스·박스·보증서·쇼핑백·영수증·인보이스·택 관련 표현<br>"단품", "본품만" 등 구성품 없음 표현은 ❌</div>
+          <div class="criteria-body">케이스·박스·보증서·쇼핑백·영수증·인보이스·택·더스트백·파우치·이너백·여분끈 등 관련 표현<br>"단품", "본품만" 등 구성품 없음 표현은 ❌</div>
         </div>
         <div class="criteria-item" onclick="toggleCriteria(this)">
           <div class="criteria-header"><span>구성품 연식</span><i class="ti ti-chevron-down ci-arrow"></i></div>
@@ -718,7 +718,7 @@
       </div>
     </div>
   <div style="padding: 0.75rem 1.25rem; border-top: 0.5px solid var(--border-light); display:flex; align-items:center; justify-content:space-between;">
-    <span style="font-size:10px; color:var(--text-muted); letter-spacing:0.05em;">v1.0.8 · 2026-06-22</span>
+    <span style="font-size:10px; color:var(--text-muted); letter-spacing:0.05em;">v1.2.0 · 2026-06-22</span>
     <button onclick="doLogout()" style="font-size:10px;color:var(--text-muted);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:3px;padding:2px 4px;border-radius:4px;transition:color .15s;" onmouseover="this.style.color='var(--red-text)'" onmouseout="this.style.color='var(--text-muted)'">
       <i class="ti ti-logout" style="font-size:12px"></i> 로그아웃
     </button>
@@ -1055,7 +1055,7 @@
   }
 
   /* ── 서버리스 함수 호출 (API 키는 서버에만 존재, 클라이언트에 노출 안 됨) ── */
-  async function callAPI(title, content) {
+  async function callAPI(title, content, category) {
     const token = localStorage.getItem('occc_token') || '';
     const res = await fetch('/api/analyze', {
       method: 'POST',
@@ -1063,7 +1063,7 @@
         'Content-Type': 'application/json',
         'x-occc-token': token
       },
-      body: JSON.stringify({ title, content })
+      body: JSON.stringify({ title, content, category: category || '' })
     });
     const data = await res.json().catch(() => ({}));
     if (res.status === 401) {
@@ -1335,7 +1335,7 @@
       let parsed = null;
       let mismatch = {};
       try {
-        const raw = await callAPI(row.title, row.body);
+        const raw = await callAPI(row.title, row.body, row.category);
         parsed = parseResponse(raw);
         mismatch = checkAttrMismatch(row, parsed);
         batchResults.push({ ...row, parsed, raw, mismatch, ok: true });
@@ -1583,8 +1583,8 @@
   function extractSizeNums(text) {
     const t = (text || '').toUpperCase();
     const nums = t.match(/\b\d{2,3}(\.\d)?\b/g) || [];
-    const letters = t.match(/\b(XXXL|XXL|XL|XS|FREE|ONE\s*SIZE|ONESIZE|GM|MM|TPM|BB|PM|NANO|PETITE|JUMBO|MAXI|MICRO|COMPACT|LONG|MINI|SMALL|MEDIUM|LARGE|TEEN|TOY|REGULAR)\b/g) || [];
-    const korean = (text || '').match(/미니|스몰|라지|미디움|미듐|맥시|나노|점보|마이크로|컴팩트|롱|틴|토이|레귤러/g) || [];
+    const letters = t.match(/\b(XXXL|XXL|XL|XS|FREE|ONE\s*SIZE|ONESIZE|GM|MM|TPM|BB|PM|NANO|PETITE|JUMBO|MAXI|MICRO|COMPACT|MINI|SMALL|MEDIUM|LARGE|TEEN|TOY|REGULAR)\b/g) || [];
+    const korean = (text || '').match(/미니|스몰|라지|미디움|미듐|맥시|나노|점보|마이크로|컴팩트|틴|토이|레귤러/g) || [];
     const sml = t.match(/(?<![A-Z])\b(S|M|L)\b(?![A-Z])/g) || [];
     return [...nums, ...letters.map(s => s.replace(/\s/g, '')), ...korean, ...sml];
   }
