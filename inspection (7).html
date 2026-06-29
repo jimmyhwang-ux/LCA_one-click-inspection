@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Inspection - OCCC</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    background: #ECECEC;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+    color: #1A1A1A;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .device-wrap {
+    max-width: 420px;
+    margin: 0 auto;
+    background: #ECECEC;
+    min-height: 100vh;
+    position: relative;
+    box-shadow: 0 0 40px rgba(0,0,0,0.15);
+  }
+
+  .statusbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px 4px;
+    font-size: 13px; font-weight: 700; color: #1A1A1A;
+  }
+  .statusbar .right { display: flex; align-items: center; gap: 5px; font-size: 13px; }
+
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px 14px;
+  }
+  .back-btn { font-size: 22px; color: #1A1A1A; background: none; border: none; padding: 4px; cursor: pointer; }
+  .top-totop {
+    background: #D9D9D9; color: #5A5A5A; font-weight: 700; font-size: 13px;
+    padding: 8px 16px; border-radius: 20px; border: none;
+  }
+
+  .screen { display: none; padding: 0 16px 100px; }
+  .screen.active { display: block; }
+
+  .search-hero { padding: 40px 0 20px; text-align: center; }
+  .search-hero .ico { font-size: 40px; color: #1A1A1A; margin-bottom: 14px; }
+  .search-hero h1 { font-size: 19px; font-weight: 800; color: #1A1A1A; }
+  .search-hero p { font-size: 13px; color: #6B6B6B; margin-top: 6px; line-height: 1.6; }
+
+  .care-input-row { display: flex; gap: 8px; margin-top: 24px; }
+  .care-input {
+    flex: 1; padding: 14px 16px; font-size: 16px; font-weight: 700;
+    border: 1.5px solid #CFCFCF; border-radius: 10px; background: #fff;
+    color: #1A1A1A;
+  }
+  .care-input::placeholder { color: #B0B0B0; font-weight: 500; }
+  .care-search-btn {
+    background: #1A1A1A; color: #fff; border: none; border-radius: 10px;
+    padding: 0 18px; font-size: 15px; font-weight: 700; cursor: pointer;
+  }
+
+  .demo-hint { margin-top: 18px; background: #fff; border-radius: 10px; padding: 14px 16px; }
+  .demo-hint .label { font-size: 11px; font-weight: 700; color: #9A9A9A; margin-bottom: 8px; }
+  .demo-chip-row { display: flex; flex-direction: column; gap: 8px; }
+  .demo-chip {
+    display: flex; align-items: center; justify-content: space-between;
+    background: #F5F5F5; border-radius: 8px; padding: 10px 12px;
+    cursor: pointer; border: none; width: 100%; text-align: left;
+  }
+  .demo-chip:active { background: #EAEAEA; }
+  .demo-chip .num { font-weight: 800; font-size: 14px; color: #1A1A1A; }
+  .demo-chip .name { font-size: 12px; color: #6B6B6B; margin-top: 2px; }
+  .demo-chip .arrow { color: #B0B0B0; font-size: 16px; }
+
+  .search-error {
+    margin-top: 14px; background: #FAE3E3; color: #B23B3B;
+    border-radius: 8px; padding: 10px 14px; font-size: 13px; font-weight: 600;
+    display: none;
+  }
+  .search-error.show { display: block; }
+
+  .loading-wrap {
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    padding: 60px 0; gap: 14px;
+  }
+  .loading-wrap.show { display: flex; }
+  .loading-spinner {
+    width: 34px; height: 34px; border: 3px solid #D9D9D9; border-top-color: #1A1A1A;
+    border-radius: 50%; animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-wrap p { font-size: 13px; color: #6B6B6B; font-weight: 600; }
+
+  .field-row {
+    display: flex; align-items: baseline; justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 0.5px solid #D5D5D5;
+    gap: 10px;
+  }
+  .field-row .k { font-size: 15px; font-weight: 700; color: #1A1A1A; flex-shrink: 0; }
+  .field-row .v { font-size: 16px; font-weight: 800; color: #1A1A1A; text-align: right; }
+  .field-row .v.small { font-size: 14px; font-weight: 600; }
+  .field-note { font-size: 11px; color: #8A8A8A; padding: 4px 0 10px; }
+
+  .sanction-row .v { color: #1A1A1A; }
+  .sanction-bad .v { color: #E03B3B; }
+
+  .change-model-btn {
+    display: block; width: 100%; background: #3A3A3A; color: #fff;
+    border: none; border-radius: 8px; padding: 16px; margin: 18px 0;
+    font-size: 16px; font-weight: 800; text-align: center; cursor: pointer;
+  }
+
+  .attr-table { background: #DCDCDC; border-radius: 10px; overflow: hidden; margin-bottom: 18px; }
+  .attr-table-title {
+    text-align: center; font-size: 14px; font-weight: 800; padding: 10px;
+    background: #DCDCDC; color: #1A1A1A;
+  }
+  .attr-table-row { display: flex; background: #fff; }
+  .attr-table-cell {
+    flex: 1; text-align: center; padding: 16px 8px; font-size: 14px; font-weight: 700;
+    border-right: 0.5px solid #E5E5E5;
+  }
+  .attr-table-cell:last-child { border-right: none; }
+  .attr-table-cell .lbl { font-size: 11px; color: #9A9A9A; font-weight: 600; margin-bottom: 4px; display:block; }
+
+  .section-title {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 17px; font-weight: 800; padding: 14px 0;
+  }
+
+  .body-detail { padding-bottom: 18px; }
+  .body-detail .product-name { font-size: 16px; font-weight: 800; margin-bottom: 8px; }
+  .body-display {
+    font-size: 14px; line-height: 1.85; color: #2A2A2A;
+    background: #fff; border-radius: 10px; padding: 14px;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .body-hl {
+    background: #FFE4A8; border-radius: 3px; padding: 0 2px; font-weight: 700;
+  }
+  .body-hl-flag {
+    background: #FFC9C9; border-radius: 3px; padding: 0 2px; font-weight: 700;
+  }
+
+  .price-row { display: flex; justify-content: space-between; padding: 14px 0; border-top: 0.5px solid #D5D5D5; margin-top: 4px; }
+  .price-row .k { font-size: 14px; font-weight: 700; color: #4A4A4A; }
+  .price-row .v { font-size: 17px; font-weight: 800; color: #1A1A1A; }
+
+  .db-title-row { display: flex; align-items: center; justify-content: space-between; padding: 18px 0 14px; }
+  .db-title-row h2 { font-size: 21px; font-weight: 900; display: flex; align-items: center; gap: 6px; }
+  .db-title-row h2 i { font-size: 15px; color: #9A9A9A; }
+  .genuine-badge { background: #3B7AE0; color: #fff; font-weight: 800; font-size: 13px; padding: 7px 18px; border-radius: 20px; }
+
+  .ai-card { background: #fff; border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+  .ai-card-title { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; color: #1A1A1A; margin-bottom: 10px; }
+  .ai-card-title i { color: #3B7AE0; }
+  .ai-item { padding: 10px 0; border-bottom: 0.5px solid #EEE; }
+  .ai-item:last-child { border-bottom: none; }
+  .ai-item-head { display: flex; align-items: center; justify-content: space-between; }
+  .ai-item-name { font-size: 14px; font-weight: 700; }
+  .ai-flag-badge {
+    font-size: 10.5px; font-weight: 800; padding: 3px 9px; border-radius: 20px;
+  }
+  .ai-flag-badge.auto { background: #FFD7D7; color: #B23B3B; }
+  .ai-flag-badge.info { background: #FFE9C2; color: #946A1A; }
+  .ai-bullet { font-size: 12.5px; color: #6B6B6B; margin-top: 4px; padding-left: 12px; position: relative; }
+  .ai-bullet::before { content:'•'; position:absolute; left:0; }
+  .ai-bullet.flagged { background:#FFE2E2; border-radius:6px; padding:3px 7px; margin: 3px -7px 0; color:#1A1A1A; }
+  .ai-warn-text { font-size: 11.5px; font-weight: 700; color: #B23B3B; background: #FFE2E2; border-radius: 6px; padding: 5px 8px; margin-top: 6px; }
+
+  .reg-btn {
+    display: block; width: 100%; background: #3B7AE0; color: #fff;
+    border: none; border-radius: 8px; padding: 16px; margin: 18px 0;
+    font-size: 16px; font-weight: 800; text-align: center; cursor: pointer;
+  }
+
+  .judge-block { padding: 16px 0; }
+  .judge-block h3 { font-size: 22px; font-weight: 900; margin-bottom: 12px; }
+  .judge-option-btn {
+    display: block; width: 100%; border: none; border-radius: 8px;
+    padding: 16px; font-size: 15px; font-weight: 700; color: #8A8A8A;
+    margin-bottom: 10px; cursor: pointer; text-align: center;
+  }
+  .judge-option-btn.hold { background: #F4E3D0; }
+  .judge-option-btn.fail { background: #FAD9D9; }
+  .judge-option-btn.selected { color: #1A1A1A; box-shadow: inset 0 0 0 2.5px #1A1A1A; }
+
+  .judge-hr { height: 8px; background: #fff; margin: 0 -16px; }
+
+  .final-result-block { text-align: center; padding: 22px 0; }
+  .final-result-block .ttl { font-size: 19px; font-weight: 800; margin-bottom: 18px; }
+  .final-result-block .val {
+    font-size: 38px; font-weight: 900; color: #E03B3B;
+  }
+  .final-result-block .val.pass { color: #2A8A4A; }
+  .final-result-block .val.placeholder { color: #C0C0C0; font-size: 20px; }
+
+  .img-upload-zone {
+    width: 96px; height: 96px; background: #F5F5F5; border-radius: 10px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px; cursor: pointer;
+  }
+  .img-upload-zone i { font-size: 26px; color: #8A8A8A; }
+  .img-upload-zone span { font-size: 10.5px; color: #8A8A8A; font-weight: 600; text-align: center; line-height: 1.3; }
+
+  .memo-input {
+    width: 100%; min-height: 70px; border: 1.5px solid #CFCFCF; border-radius: 8px;
+    padding: 12px; font-size: 14px; margin-top: 10px; font-family: inherit; resize: vertical;
+  }
+
+  .final-save-btn {
+    display: block; width: 100%; background: #1A1A1A; color: #fff;
+    border: none; border-radius: 8px; padding: 17px; margin: 20px 0 30px;
+    font-size: 16px; font-weight: 800; text-align: center; cursor: pointer;
+  }
+  .final-save-btn:disabled { background: #B0B0B0; cursor: not-allowed; }
+
+  /* 보류/불합격 패널 */
+  .reason-panel { display: none; background: #fff; border-radius: 12px; overflow: hidden; margin-bottom: 12px; }
+  .reason-panel.show { display: block; }
+  .reason-section { border-bottom: 0.5px solid #EFEFEF; }
+  .reason-section:last-child { border-bottom: none; }
+  .reason-section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; cursor: pointer; background: #fff;
+  }
+  .reason-section-head .ttl { font-size: 15px; font-weight: 800; color: #1A1A1A; }
+  .reason-section-head i { font-size: 14px; color: #9A9A9A; transition: transform .2s; }
+  .reason-section.open .reason-section-head i { transform: rotate(180deg); }
+  .reason-section-body { display: none; padding: 0 16px 8px; }
+  .reason-section.open .reason-section-body { display: block; }
+  .reason-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 0; border-bottom: 0.5px solid #F5F5F5; cursor: pointer;
+  }
+  .reason-item:last-of-type { border-bottom: none; }
+  .reason-item .dash { width: 14px; height: 2px; background: #CFCFCF; border-radius: 2px; flex-shrink: 0; }
+  .reason-item .lbl { font-size: 14px; color: #1A1A1A; flex: 1; }
+  .reason-item .add-btn {
+    font-size: 11px; font-weight: 700; color: #5A8AE0; background: #EEF3FC;
+    border: none; border-radius: 6px; padding: 4px 10px; cursor: pointer; white-space: nowrap;
+  }
+  .reason-add-custom {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 11px 0; cursor: pointer; color: #9A9A9A; font-size: 13px; font-weight: 700;
+    gap: 8px;
+  }
+  .reason-add-custom i { font-size: 16px; }
+  /* 텍스트 입력 포함 행 */
+  .reason-item-input { display: flex; align-items: center; gap: 6px; padding: 8px 0; flex-wrap: wrap; }
+  .reason-item-input .lbl { font-size: 14px; color: #1A1A1A; }
+  .reason-chip {
+    display: inline-flex; align-items: center;
+    background: #EFEFEF; border: none; border-radius: 6px;
+    padding: 5px 10px; font-size: 13px; font-weight: 600; cursor: pointer; color: #1A1A1A;
+  }
+  .reason-chip.selected { background: #1A1A1A; color: #fff; }
+  /* 사유 누적 리스트 */
+  .reason-list-item {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    background: #F7F7F7; border-radius: 8px;
+    padding: 10px 12px; margin-bottom: 8px; gap: 8px;
+  }
+  .reason-list-item .txt { font-size: 13px; color: #1A1A1A; flex: 1; line-height: 1.5; }
+  .reason-list-item .del-btn {
+    background: none; border: none; color: #B0B0B0; font-size: 16px;
+    cursor: pointer; flex-shrink: 0; padding: 0 2px;
+  }
+  .reason-list-empty { font-size: 13px; color: #B0B0B0; text-align: center; padding: 12px 0; }
+
+  /* 팝업 모달 */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.45);
+    align-items: flex-end; justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-sheet {
+    background: #F5F5F5; border-radius: 20px 20px 0 0;
+    width: 100%; max-width: 420px;
+    max-height: 82vh; overflow-y: auto;
+    padding-bottom: 30px;
+    animation: slideUp .25s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-handle {
+    width: 40px; height: 4px; background: #CFCFCF; border-radius: 2px;
+    margin: 12px auto 8px;
+  }
+  .modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 18px 12px;
+  }
+  .modal-title { font-size: 18px; font-weight: 900; }
+  .modal-close {
+    background: #E8E8E8; border: none; border-radius: 50%;
+    width: 30px; height: 30px; font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; color: #5A5A5A;
+  }
+
+  /* 5번 사진: 보류 결과 확정 패널 */
+  .confirm-panel { display: none; background: #fff; border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
+  .confirm-panel.show { display: block; }
+  .confirm-result-badge {
+    display: block; width: 100%; text-align: center; padding: 18px;
+    font-size: 17px; font-weight: 800; border-bottom: 0.5px solid #F0F0F0;
+  }
+  .confirm-result-badge.hold { background: #FFF3E8; color: #B05A00; }
+  .confirm-result-badge.fail { background: #FDE8E8; color: #B00000; }
+  .confirm-section-title { font-size: 13px; font-weight: 800; color: #6B6B6B; padding: 14px 16px 6px; }
+  .confirm-selected-reason {
+    margin: 0 16px 12px; background: #F7F7F7; border-radius: 8px;
+    padding: 12px 14px; font-size: 14px; color: #1A1A1A; line-height: 1.6;
+  }
+  .confirm-img-row { display: flex; gap: 10px; padding: 0 16px 16px; flex-wrap: wrap; }
+  .confirm-add-reason-btn {
+    display: block; width: calc(100% - 32px); margin: 0 16px 16px;
+    background: #5A8AE0; color: #fff; border: none; border-radius: 8px;
+    padding: 15px; font-size: 15px; font-weight: 800; text-align: center; cursor: pointer;
+  }
+
+  .toast {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: #1A1A1A; color: #fff; font-size: 14px; font-weight: 700;
+    padding: 14px 22px; border-radius: 30px; opacity: 0; transition: all .25s;
+    z-index: 50; white-space: nowrap; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    max-width: 420px; margin: 0 auto;
+    background: #fff; border-top: 0.5px solid #D5D5D5;
+    display: flex; align-items: stretch; justify-content: space-around;
+    padding: 8px 0 18px;
+  }
+  .nav-tab {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px; cursor: pointer; padding: 4px 2px;
+    font-size: 10px; color: #9A9A9A; font-weight: 600; text-align: center; line-height: 1.3;
+  }
+  .nav-tab i { font-size: 20px; }
+  .nav-tab.active { color: #E0368C; }
+  .nav-tab.active i { color: #E0368C; }
+
+  .footer-version { text-align: center; font-size: 10px; color: #B0B0B0; padding: 6px 0 4px; }
+</style>
+</head>
+<body>
+
+<div class="device-wrap">
+
+  <div class="statusbar">
+    <span id="clock">8:33</span>
+    <div class="right">
+      <i class="ti ti-volume-3"></i>
+      <i class="ti ti-wifi"></i>
+      <span style="background:#1A1A1A;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px">100</span>
+    </div>
+  </div>
+
+  <div class="topbar">
+    <button class="back-btn" onclick="goBack()"><i class="ti ti-chevron-left"></i></button>
+    <button class="top-totop" onclick="scrollToTop()">맨 위로 ↑</button>
+  </div>
+
+  <div class="screen active" id="screen-search">
+    <div class="search-hero">
+      <div class="ico"><i class="ti ti-123"></i></div>
+      <h1>번호 입력</h1>
+      <p>케어번호를 직접 입력하여<br>검수를 시작하세요</p>
+    </div>
+
+    <div class="care-input-row">
+      <input type="text" class="care-input" id="care-input" placeholder="케어번호 입력" inputmode="numeric">
+      <button class="care-search-btn" onclick="searchCare()">조회</button>
+    </div>
+
+    <div class="search-error" id="search-error">해당 케어번호의 데이터를 찾을 수 없습니다. 데모 케어번호를 이용해주세요.</div>
+
+    <div class="loading-wrap" id="loading-wrap">
+      <div class="loading-spinner"></div>
+      <p>AI가 본문을 분석하고 있습니다...</p>
+    </div>
+
+    <div class="demo-hint">
+      <div class="label">데모 케어번호 (탭하여 바로 조회)</div>
+      <div class="demo-chip-row">
+        <button class="demo-chip" onclick="loadDemo('1234962')">
+          <div><div class="num">1234962</div><div class="name">프라다 벨트 남성용 95</div></div>
+          <i class="ti ti-chevron-right arrow"></i>
+        </button>
+        <button class="demo-chip" onclick="loadDemo('1234510')">
+          <div><div class="num">1234510</div><div class="name">톰브라운 2사이즈 가디건</div></div>
+          <i class="ti ti-chevron-right arrow"></i>
+        </button>
+        <button class="demo-chip" onclick="loadDemo('1233829')">
+          <div><div class="num">1233829</div><div class="name">발렌시아가 스톰퍼 부츠</div></div>
+          <i class="ti ti-chevron-right arrow"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-result">
+
+    <div class="field-row"><span class="k">케어 번호</span><span class="v" id="r-careno"></span></div>
+    <div class="field-row"><span class="k">판매자 상점명</span><span class="v small" id="r-shop"></span></div>
+    <div class="field-row"><span class="k">번개케어 판매 / 구매 건수</span><span class="v small" id="r-sales"></span></div>
+    <div class="field-row"><span class="k">매입위탁 검수 / 구매 건수</span><span class="v small" id="r-consign"></span></div>
+    <div class="field-note">* 검수 건수는 정가품 검수가 진행된 건수입니다.(합격, 불합격 포함)</div>
+    <div class="field-row sanction-row" id="r-sanction-row"><span class="k">제재 상태</span><span class="v" id="r-sanction"></span></div>
+    <div class="field-row sanction-bad" id="r-fake-row"><span class="k">번개케어 가품 제재(전체 가품 제재)</span><span class="v" id="r-fake"></span></div>
+    <div class="field-note">* 전체 가품 제재 건수는 번개케어 가품 제재 건수를 포함하고 있습니다.</div>
+
+    <button class="change-model-btn">모델 변경하기</button>
+
+    <div class="attr-table">
+      <div class="attr-table-title">상품속성</div>
+      <div class="attr-table-row">
+        <div class="attr-table-cell"><span class="lbl">상품 상태</span><span id="r-attr-status"></span></div>
+        <div class="attr-table-cell"><span class="lbl">사이즈</span><span id="r-attr-size">—</span></div>
+      </div>
+    </div>
+
+    <div class="section-title">본문 상세보기 <i class="ti ti-chevron-up"></i></div>
+    <div class="body-detail">
+      <div class="product-name" id="r-title"></div>
+      <div class="body-display" id="r-body"></div>
+    </div>
+
+    <div class="price-row"><span class="k">상품 가격</span><span class="v" id="r-price"></span></div>
+
+    <div class="ai-card">
+      <div class="ai-card-title"><i class="ti ti-robot"></i> AI 추출 항목화 결과</div>
+      <div id="r-ai-items"></div>
+    </div>
+
+
+    <div class="judge-hr"></div>
+
+    <!-- 보류 버튼 -->
+    <div class="judge-block">
+      <h3>보류</h3>
+      <button class="judge-option-btn hold" id="btn-hold" onclick="selectJudge('hold')">결과 보류</button>
+    </div>
+
+    <div class="judge-hr"></div>
+
+    <!-- 불합격 버튼 -->
+    <div class="judge-block">
+      <h3>불합격</h3>
+      <button class="judge-option-btn fail" id="btn-fail" onclick="selectJudge('fail')">결과 불합격</button>
+    </div>
+
+    <div class="judge-hr"></div>
+
+    <!-- 결과 확정 패널 -->
+    <div class="confirm-panel" id="confirm-panel">
+      <div class="confirm-result-badge" id="confirm-badge">결과 보류 ✓</div>
+      <div class="confirm-section-title">선택된 사유</div>
+      <div id="confirm-reasons-list" style="padding:0 16px 4px"></div>
+      <div class="confirm-section-title">보류 사유 이미지 추가 (유저 제공)</div>
+      <div class="confirm-img-row">
+        <div class="img-upload-zone"><i class="ti ti-plus"></i><span>앨범에서<br>가져오기</span></div>
+      </div>
+      <button class="confirm-add-reason-btn" onclick="addMoreReason()">+ 보류 사유 추가</button>
+    </div>
+
+    <div class="final-result-block">
+      <div class="ttl">1차 최종 결과</div>
+      <div class="val placeholder" id="r-final-result">미정</div>
+    </div>
+
+    <div class="judge-hr"></div>
+
+    <div style="padding:16px 0">
+      <h3 style="font-size:19px;font-weight:800;margin-bottom:6px">메모등록(특이사항)</h3>
+      <textarea class="memo-input" id="r-memo" placeholder="검수자 메모를 입력하세요"></textarea>
+    </div>
+
+    <button class="final-save-btn" id="btn-save" onclick="saveResult()" disabled>검수 결과 최종 저장</button>
+
+  </div>
+
+  <!-- 보류/불합격 사유 선택 팝업 모달 -->
+  <div class="modal-overlay" id="reason-modal" onclick="closeModalOutside(event)">
+    <div class="modal-sheet" id="reason-modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <span class="modal-title" id="modal-title">보류 사유 선택</span>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="bottom-nav">
+    <div class="nav-tab" onclick="switchTab('scan')">
+      <i class="ti ti-qrcode"></i>
+      <span>코드 스캔</span>
+    </div>
+    <div class="nav-tab active" id="tab-input" onclick="switchTab('input')">
+      <i class="ti ti-123"></i>
+      <span>번호 입력</span>
+    </div>
+    <div class="nav-tab" onclick="switchTab('pending')">
+      <i class="ti ti-clipboard-check"></i>
+      <span>검수 결과<br>대기중</span>
+    </div>
+    <div class="nav-tab" onclick="switchTab('offline')">
+      <i class="ti ti-truck-delivery"></i>
+      <span>오프라인<br>배송완료 처리</span>
+    </div>
+  </div>
+
+  <div class="footer-version">OCCC Mobile Prototype · v0.1 (Demo)</div>
+
+</div>
+
+<script>
+// ────────────────────────────────────────────────────────────
+// OCCC 모바일 프로토타입 데모 데이터
+// 실제로는 analyze.js(Claude API)가 본문을 분석해서 만들어내는 결과를
+// 시연용으로 미리 계산해서 넣어둔 것 (별도 DB 연동 없이 동작)
+// ────────────────────────────────────────────────────────────
+
+const CRITERIA = [
+  "모델명 / 색상 / 소재",
+  "사이즈",
+  "새상품 여부",
+  "제조 연식 각인",
+  "기재 구성품",
+  "구성품 연식",
+  "수선 / 각인 여부",
+  "하자 기재 여부",
+  "사용감 참고"
+];
+
+const DEMO_DATA = {
+
+  // ── 케이스 1: 합격 (프라다 벨트, 선판정 신호 없음) ──
+  "1234962": {
+    careNo: "1234962",
+    shop: "믿음과신뢰가영원하리",
+    salesCount: "17건 / 2건",
+    consignCount: "0건 / 0건",
+    sanction: "정상",
+    fakeSanction: "0건(총 0건)",
+    fakeSanctionAlert: false,
+    attrStatus: "사용감 적음",
+    title: "프라다 벨트 남성용 95",
+    body: "프라다 남성용 벨트 95 사이즈입니다. 풀박스 구성이고, 벨트 상태 좋습니다. 고급스러운 디자인으로 어떤 코디에도 잘 어울립니다.\n\nMADE IN ITALY\n총길이는 110 cm 나옵니다\n사이즈는 95 사이즈 입니다\n폭은 35 mm 이고\n구멍이 없는거라 사이즈 관계없이 착용 가능합니다\n버클에 자연스러운 잔기스는 있으나 스트랩 은 짱짱 합니다\n100 % 정품입니다 만\n편하게 차시라고 저렴하게 내 놓습니다\n더스트 는 여기께 아닙니다 ( 더스트 는 없습니다 )\n(마지막 사진에 참고) 박스 에 넣어서 보내 드립니다\n필요하신분 편하게 문의주세요",
+    price: "240,000원",
+    parsed: [
+      { label: "모델명 / 색상 / 소재", found: true, details: ["프라다 벨트 남성용 95", "MADE IN ITALY"] },
+      { label: "사이즈", found: true, details: ["95 사이즈입니다", "사이즈는 95 사이즈 입니다", "폭은 35 mm 이고", "총길이는 110 cm 나옵니다"] },
+      { label: "새상품 여부", found: false, details: [] },
+      { label: "제조 연식 각인", found: false, details: [] },
+      { label: "기재 구성품", found: true, details: ["풀박스 구성이고", "박스 에 넣어서 보내 드립니다", "더스트 는 여기께 아닙니다 ( 더스트 는 없습니다 )"] },
+      { label: "구성품 연식", found: false, details: [] },
+      { label: "수선 / 각인 여부", found: false, details: [] },
+      { label: "하자 기재 여부", found: false, details: [] },
+      { label: "사용감 참고", found: true, details: ["버클에 자연스러운 잔기스는 있으나 스트랩 은 짱짱 합니다"] }
+    ],
+    mismatch: {
+      4: { auto: true, tmplLabel: "구성품 모호 표현", warn: '구성품 모호 표현 기재 ("풀박스")' }
+    }
+  },
+
+  // ── 케이스 2: 보류 (톰브라운 가디건, 사이즈 속성-본문 불일치) ──
+  "1234510": {
+    careNo: "1234510",
+    shop: "톰브라운매니아샵",
+    salesCount: "42건 / 5건",
+    consignCount: "1건 / 0건",
+    sanction: "정상",
+    fakeSanction: "0건(총 0건)",
+    fakeSanctionAlert: false,
+    attrStatus: "사용감 많음",
+    title: "톰브라운 2사이즈 가디건",
+    body: "톰브라운 가디건 2사이즈 판매합니다 사용감 있고 정품으로 알고 중고거래했는데 혹시나 아닐 수 있으니 싸게 팝니다\n\n단품이고, 안전결제해주시면 되시고 당일발송해드립니다 ☺️",
+    price: "180,000원",
+    attrSize: "3", // 속성값(실제 사이즈)과 본문이 다른 상황을 가정
+    parsed: [
+      { label: "모델명 / 색상 / 소재", found: true, details: ["톰브라운 2사이즈 가디건", "톰브라운 가디건 2사이즈 판매합니다"] },
+      { label: "사이즈", found: true, details: ["2사이즈"] },
+      { label: "새상품 여부", found: false, details: [] },
+      { label: "제조 연식 각인", found: false, details: [] },
+      { label: "기재 구성품", found: false, details: [] },
+      { label: "구성품 연식", found: false, details: [] },
+      { label: "수선 / 각인 여부", found: false, details: [] },
+      { label: "하자 기재 여부", found: false, details: [] },
+      { label: "사용감 참고", found: true, details: ["사용감 있고 정품으로 알고 중고거래했는데"] }
+    ],
+    mismatch: {
+      1: { auto: true, tmplLabel: "사이즈 불일치", warn: "사이즈 불일치 — 속성값 \"3\" vs AI 발췌 사이즈 \"2\" 상이" }
+    }
+  },
+
+  // ── 케이스 3: 보류 + 가품제재 이력 (발렌시아가 스니커즈, 구성품 모호표현 + 제재 경고) ──
+  "1233829": {
+    careNo: "1233829",
+    shop: "발렌시아가공식딜러",
+    salesCount: "8건 / 0건",
+    consignCount: "0건 / 0건",
+    sanction: "정상",
+    fakeSanction: "2건(총 2건)",
+    fakeSanctionAlert: true,
+    attrStatus: "새상품(미사용)",
+    attrSize: "42",
+    title: "발렌시아가 스톰퍼 부츠 레더 43 새상품",
+    body: "발렌시아가 스톰퍼 부츠 레더 블랙 43 새상품\n\n라스트 원 제품 구매해서 사람들이 매장에서 시착하다가 생긴 앞발등 미세한 주름 있습니다.\n\n직거래시 네고 가능\n못참고 한번 신어서 상태 보려면 문의주세요\n\n구성품 다 가지고 있어요",
+    price: "890,000원",
+    parsed: [
+      { label: "모델명 / 색상 / 소재", found: true, details: ["발렌시아가 스톰퍼 부츠 레더 블랙 43 새상품"] },
+      { label: "사이즈", found: true, details: ["43"] },
+      { label: "새상품 여부", found: true, details: ["새상품"] },
+      { label: "제조 연식 각인", found: false, details: [] },
+      { label: "기재 구성품", found: true, details: ["구성품 다 가지고 있어요"] },
+      { label: "구성품 연식", found: false, details: [] },
+      { label: "수선 / 각인 여부", found: false, details: [] },
+      { label: "하자 기재 여부", found: false, details: [] },
+      { label: "사용감 참고", found: true, details: ["앞발등 미세한 주름 있습니다"] }
+    ],
+    mismatch: {
+      1: { auto: true, warn: '사이즈 불일치 — 속성값 "42" vs 본문 "43" 상이' },
+      2: { auto: false, warn: "새상품 기재 — 실물 확인 필요" },
+      4: { auto: true, tmplLabel: "구성품 표기 모호 (풀구성 등)", warn: "구성품 모호 표현 기재 (\"구성품 다 가지고\") — 본문 직접 확인 필요" }
+    }
+  }
+};
+
+const HOLD_TEMPLATES = {
+  "모델명 / 색상 / 소재": [
+    { label: "모델명 불일치", value: "보류 > 본문 상품정보와 불일치 > 상품 설명에 기재된 모델명 : [텍스트], 실제 도착한 상품의 모델명 : [텍스트]" },
+    { label: "색상 불일치", value: "보류 > 본문 상품정보와 불일치 > 상품 설명에 기재된 색상 : [텍스트], 실제 도착한 상품의 색상 : [텍스트]" }
+  ],
+  "사이즈": [
+    { label: "사이즈 불일치", value: "보류 > 사이즈 정보 불일치(누락) > 상품 설명에 기재된 상품 사이즈 : [텍스트], 실제 도착한 상품 사이즈 : [텍스트]" },
+    { label: "속성 기타 + 본문 미기재", value: "보류 > 기타 > 입고된 상품의 사이즈를 확인해주세요." }
+  ],
+  "기재 구성품": [
+    { label: "구성품 표기 모호 (풀구성 등)", value: "보류 > 도착한 구성품 확인 필요 > 구성품이 상품 설명과 같은지 확인 후 구매를 결정해주세요." },
+    { label: "기재 구성품과 모델 불일치", value: "보류 > 본문 구성품과 상이 > 구성품에 기재된 정보와 입고된 상품의 정보가 상이합니다." }
+  ],
+  "새상품 여부": [
+    { label: "새상품 실물 확인 필요", value: "보류 > 본문 상품정보와 불일치 > 새상품 불일치 — 입고 시점 사용 흔적 확인 후 구매를 결정해주세요." }
+  ]
+};
+
+// ────────────────────────────────────────────────────────────
+// OCCC 모바일 프로토타입 동작 로직
+// ────────────────────────────────────────────────────────────
+
+let currentCase = null;
+let judgeState = null; // 'hold' | 'fail' | null
+let selectedReasons = []; // 보류 사유 복수 누적
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function updateClock() {
+  const now = new Date();
+  const h = now.getHours();
+  const m = String(now.getMinutes()).padStart(2, '0');
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  document.getElementById('clock').textContent = `${h12}:${m}`;
+}
+updateClock();
+setInterval(updateClock, 30000);
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function scrollToTop() {
+  document.querySelector('.device-wrap').scrollIntoView({ behavior: 'smooth' });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goBack() {
+  const resultScreen = document.getElementById('screen-result');
+  if (resultScreen.classList.contains('active')) {
+    resultScreen.classList.remove('active');
+    document.getElementById('screen-search').classList.add('active');
+    resetSearchForm();
+  }
+}
+
+function resetSearchForm() {
+  document.getElementById('care-input').value = '';
+  document.getElementById('search-error').classList.remove('show');
+  document.getElementById('loading-wrap').classList.remove('show');
+  currentCase = null;
+  judgeState = null;
+}
+
+function searchCare() {
+  const val = document.getElementById('care-input').value.trim();
+  if (!val) return;
+  if (DEMO_DATA[val]) {
+    loadDemo(val);
+  } else {
+    document.getElementById('search-error').classList.add('show');
+  }
+}
+
+function loadDemo(careNo) {
+  document.getElementById('search-error').classList.remove('show');
+  document.getElementById('loading-wrap').classList.add('show');
+
+  // AI 분석 중인 것처럼 약간의 지연을 줘서 실제 동작감을 살림
+  setTimeout(() => {
+    document.getElementById('loading-wrap').classList.remove('show');
+    currentCase = DEMO_DATA[careNo];
+    judgeState = null;
+    renderResult(currentCase);
+    document.getElementById('screen-search').classList.remove('active');
+    document.getElementById('screen-result').classList.add('active');
+    scrollToTop();
+  }, 900);
+}
+
+function renderResult(data) {
+  document.getElementById('r-careno').textContent = data.careNo;
+  document.getElementById('r-shop').textContent = data.shop;
+  document.getElementById('r-sales').textContent = data.salesCount;
+  document.getElementById('r-consign').textContent = data.consignCount;
+  document.getElementById('r-sanction').textContent = data.sanction;
+  document.getElementById('r-fake').textContent = data.fakeSanction;
+
+  const fakeRow = document.getElementById('r-fake-row');
+  fakeRow.classList.toggle('sanction-bad', !!data.fakeSanctionAlert);
+
+  document.getElementById('r-attr-status').textContent = data.attrStatus;
+  document.getElementById('r-attr-size').textContent = data.attrSize || '—';
+  document.getElementById('r-title').textContent = data.title;
+  document.getElementById('r-price').textContent = data.price;
+
+  // 본문 + 하이라이트 (AI 발췌 + 선판정 키워드)
+  document.getElementById('r-body').innerHTML = buildHighlightedBody(data);
+
+  // AI 추출 항목화 결과
+  renderAiItems(data);
+
+  // 판정 영역 초기화
+  document.getElementById('btn-hold').classList.remove('selected');
+  document.getElementById('btn-fail').classList.remove('selected');
+  document.getElementById('r-memo').value = '';
+  document.getElementById('btn-save').disabled = false;
+  document.getElementById('btn-save').textContent = '검수 결과 최종 저장';
+
+  // 선판정 mismatch 있으면 자동 보류 선택 + 사유 패널 오픈 + 확정 패널 세팅
+  const finalEl = document.getElementById('r-final-result');
+  const hasMismatch = data.mismatch && Object.keys(data.mismatch).length > 0;
+  const confirmPanel = document.getElementById('confirm-panel');
+  confirmPanel.classList.remove('show');
+  selectedReasons = [];
+
+  if (hasMismatch) {
+    judgeState = 'hold';
+    document.getElementById('btn-hold').classList.add('selected');
+    finalEl.textContent = '보류';
+    finalEl.className = 'val';
+    // 선판정 자동 보류 — 첫 번째 mismatch 사유로 확정 패널 자동 세팅 (모달 없이)
+    Object.values(data.mismatch).forEach(flag => {
+      if (flag && flag.warn) {
+        selectedReasons.push({ text: flag.warn, sectionTitle: '선판정 자동 보류' });
+      }
+    });
+    if (selectedReasons.length > 0) {
+      renderConfirmPanel();
+      document.getElementById('btn-save').disabled = false;
+    }
+  } else {
+    judgeState = null;
+    finalEl.textContent = '합격';
+    finalEl.className = 'val pass';
+  }
+}
+
+function buildHighlightedBody(data) {
+  let phrases = [];
+  data.parsed.forEach(item => {
+    (item.details || []).forEach(d => {
+      const t = (d || '').trim();
+      if (t && t.length >= 2) phrases.push(t);
+    });
+  });
+  const flagKeywords = [];
+  Object.values(data.mismatch || {}).forEach(flag => {
+    if (!flag || !flag.warn) return;
+    const m = flag.warn.match(/\("([^"]+)"\)/);
+    if (m) flagKeywords.push(m[1]);
+  });
+
+  phrases = [...new Set(phrases)].sort((a, b) => b.length - a.length);
+  const allMarks = phrases.map(p => ({ text: p, isFlag: flagKeywords.some(k => p.includes(k)) }));
+  flagKeywords.forEach(k => {
+    if (!allMarks.some(m => m.text === k)) allMarks.push({ text: k, isFlag: true });
+  });
+  allMarks.sort((a, b) => b.text.length - a.text.length);
+
+  let segments = [{ text: data.body, hl: null }];
+  allMarks.forEach(mark => {
+    const next = [];
+    segments.forEach(seg => {
+      if (seg.hl) { next.push(seg); return; }
+      const idx = seg.text.indexOf(mark.text);
+      if (idx === -1) { next.push(seg); return; }
+      const before = seg.text.slice(0, idx);
+      const match = seg.text.slice(idx, idx + mark.text.length);
+      const after = seg.text.slice(idx + mark.text.length);
+      if (before) next.push({ text: before, hl: null });
+      next.push({ text: match, hl: mark.isFlag ? 'flag' : 'normal' });
+      if (after) next.push({ text: after, hl: null });
+    });
+    segments = next;
+  });
+
+  return segments.map(seg => {
+    if (seg.hl === 'flag') return `<span class="body-hl-flag">${escHtml(seg.text)}</span>`;
+    if (seg.hl === 'normal') return `<span class="body-hl">${escHtml(seg.text)}</span>`;
+    return escHtml(seg.text);
+  }).join('');
+}
+
+function renderAiItems(data) {
+  const wrap = document.getElementById('r-ai-items');
+  wrap.innerHTML = data.parsed.map((item, idx) => {
+    const flag = (data.mismatch || {})[idx];
+    let warnKeyword = '';
+    if (flag && flag.warn) {
+      const m = flag.warn.match(/\("([^"]+)"\)/);
+      if (m) warnKeyword = m[1];
+    }
+    const bullets = (item.details || []).map(d => {
+      const isFlagged = warnKeyword && d.includes(warnKeyword);
+      return `<div class="ai-bullet${isFlagged ? ' flagged' : ''}">${escHtml(d)}</div>`;
+    }).join('');
+
+    const badge = flag
+      ? `<span class="ai-flag-badge ${flag.auto ? 'auto' : 'info'}">${flag.auto ? '자동보류' : '확인필요'}</span>`
+      : '';
+
+    const warnText = flag ? `<div class="ai-warn-text">${flag.auto ? '⚠ ' : 'ℹ '}${escHtml(flag.warn)}</div>` : '';
+
+    if (!item.found) return ''; // 미기재 항목은 모바일 요약 화면에서는 생략 (확인 필요 항목 위주로)
+
+    return `
+      <div class="ai-item">
+        <div class="ai-item-head">
+          <span class="ai-item-name">${escHtml(item.label)}</span>
+          ${badge}
+        </div>
+        ${bullets}
+        ${warnText}
+      </div>
+    `;
+  }).join('') || '<div style="font-size:13px;color:#9A9A9A;text-align:center;padding:10px 0">추출된 항목이 없습니다</div>';
+}
+
+/* ── 사유 데이터 ── */
+const HOLD_REASONS = [
+  {
+    title: "도착한 구성품 확인 필요",
+    items: ["구성품이 상품 설명과 같은지 확인 후 구매를 결정해 주세요."]
+  },
+  {
+    title: "도착한 부속품 확인 필요",
+    items: ["현재 입고된 부속품 외 추가적인 부속품 확인이 불가합니다."]
+  },
+  {
+    title: "제품 부속품 누락",
+    items: ["열쇠","자물쇠","자물쇠 커버 (키뱃)","네임텍","스트랩","스트랩패드","이너파우치","잠장식","핸들 홀더(손잡이 고정용 벨트장식)"]
+  },
+  {
+    title: "본문 구성품과 상이",
+    items: ["구성품에 기재된 정보와 입고된 상품의 정보가 상이합니다."]
+  },
+  {
+    title: "기능 결함",
+    items: ["부자재","장식","소재","시간 조절 부위","태엽 부위","배터리 방전"]
+  },
+  {
+    title: "수선/커스텀 확인",
+    items: ["염색 작업","수선 작업","커스텀 작업","다이얼 재생 작업","다이얼 교체 작업","기성 스트랩으로 교체"]
+  },
+  {
+    title: "본문 상품 정보와 불일치",
+    items: ["컬러 불일치 — 실물 확인 필요","모델명 불일치 — 실물 확인 필요","모델번호 불일치 — 실물 확인 필요"]
+  },
+  {
+    title: "새상품 여부 불일치",
+    items: ["새상품 기재 — 실물 확인 필요"]
+  },
+  {
+    title: "사이즈 정보 불일치(누락)",
+    items: ["사이즈 불일치 — 속성값/본문 상이"]
+  },
+  {
+    title: "기타",
+    items: ["입고된 상품의 사이즈를 확인해 주세요.","보관시 발생한 이슈가 있을 수 있어 보관 상태를 확인해 주세요.","식별코드 일부 훼손으로 보류 처리합니다."]
+  }
+];
+
+const FAIL_REASONS = [
+  {
+    title: "상품이 가품인 경우",
+    items: ["소재","각인","로고","폰트","홀로그램","도금","라벨","마감"]
+  },
+  {
+    title: "검수 판별 불가능",
+    items: ["유약 불량","로고 훼손","각인 훼손","홀로그램 훼손","빈티지 제품","라벨 훼손","상품의 오리지널리티(원형) 훼손","번개케어 검수 기준 적용 불가"]
+  },
+  {
+    title: "기타",
+    items: ["판매 게시글과 입고된 상품이 상이하여 불합격됩니다."]
+  }
+];
+
+function renderConfirmPanel() {
+  const confirmPanel = document.getElementById('confirm-panel');
+  const badge = document.getElementById('confirm-badge');
+  const list = document.getElementById('confirm-reasons-list');
+
+  badge.textContent = judgeState === 'hold' ? '결과 보류 ✓' : '결과 불합격 ✓';
+  badge.className = 'confirm-result-badge ' + (judgeState === 'hold' ? 'hold' : 'fail');
+
+  if (selectedReasons.length === 0) {
+    list.innerHTML = '<div class="reason-list-empty">선택된 사유가 없습니다</div>';
+  } else {
+    list.innerHTML = selectedReasons.map((r, i) => `
+      <div class="reason-list-item">
+        <span class="txt"><span style="font-size:11px;color:#9A9A9A;display:block;margin-bottom:2px">${r.sectionTitle}</span>${r.text}</span>
+        <button class="del-btn" onclick="removeReason(${i})">✕</button>
+      </div>
+    `).join('');
+  }
+
+  confirmPanel.classList.add('show');
+}
+
+function removeReason(idx) {
+  selectedReasons.splice(idx, 1);
+  if (selectedReasons.length === 0) {
+    document.getElementById('confirm-panel').classList.remove('show');
+    document.getElementById('btn-save').disabled = true;
+  } else {
+    renderConfirmPanel();
+  }
+}
+
+function confirmReason() {
+  // 이 함수는 더 이상 사용 안 하지만 하위 호환 유지
+  showToast('사유 추가 완료');
+}
+
+function selectJudge(type) {
+  const holdBtn = document.getElementById('btn-hold');
+  const failBtn = document.getElementById('btn-fail');
+
+  // 같은 버튼 재클릭 → 합격으로 전환 (사유 초기화)
+  if (judgeState === type) {
+    judgeState = null;
+    selectedReasons = [];
+    holdBtn.classList.remove('selected');
+    failBtn.classList.remove('selected');
+    document.getElementById('confirm-panel').classList.remove('show');
+    updateFinalResult();
+    return;
+  }
+
+  // 다른 판정으로 전환 → 사유 초기화 후 모달 오픈
+  judgeState = type;
+  selectedReasons = [];
+  holdBtn.classList.toggle('selected', judgeState === 'hold');
+  failBtn.classList.toggle('selected', judgeState === 'fail');
+  document.getElementById('confirm-panel').classList.remove('show');
+  updateFinalResult();
+  openReasonModal(type);
+}
+
+function openReasonModal(type) {
+  const reasons = type === 'hold' ? HOLD_REASONS : FAIL_REASONS;
+  const modal = document.getElementById('reason-modal');
+  const modalBody = document.getElementById('modal-body');
+  document.getElementById('modal-title').textContent = type === 'hold' ? '보류 사유 선택' : '불합격 사유 선택';
+
+  modalBody.innerHTML = reasons.map(section => `
+    <div class="reason-section open" style="background:#fff;margin:0 12px 8px;border-radius:12px;overflow:hidden;">
+      <div class="reason-section-head" onclick="this.parentElement.classList.toggle('open')">
+        <span class="ttl">${section.title}</span>
+        <i class="ti ti-chevron-up"></i>
+      </div>
+      <div class="reason-section-body">
+        ${section.items.map(item => `
+          <div class="reason-item" onclick="pickReason('${item.replace(/'/g,"\'")}', '${section.title.replace(/'/g,"\'")}')">
+            <div class="dash"></div><span class="lbl">${item}</span>
+          </div>
+        `).join('')}
+        <div class="reason-add-custom"><span>기타 텍스트 추가</span><i class="ti ti-plus"></i></div>
+      </div>
+    </div>
+  `).join('');
+
+  modal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+// "보류 사유 추가" 버튼 — 판정 유지하면서 모달만 다시 오픈
+function addMoreReason() {
+  openReasonModal(judgeState || 'hold');
+}
+
+function closeModal() {
+  document.getElementById('reason-modal').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+function closeModalOutside(e) {
+  if (e.target === document.getElementById('reason-modal')) closeModal();
+}
+
+function toggleSection(headEl) {
+  headEl.parentElement.classList.toggle('open');
+}
+
+function pickReason(text, sectionTitle) {
+  // 중복 방지
+  if (selectedReasons.some(r => r.text === text)) {
+    closeModal();
+    showToast('이미 추가된 사유입니다');
+    return;
+  }
+
+  selectedReasons.push({ text, sectionTitle });
+  closeModal();
+  renderConfirmPanel();
+  setTimeout(() => document.getElementById('confirm-panel').scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
+  document.getElementById('btn-save').disabled = false;
+}
+
+
+
+function updateFinalResult() {
+  const finalEl = document.getElementById('r-final-result');
+  if (judgeState === 'hold') {
+    finalEl.textContent = '보류';
+    finalEl.className = 'val';
+  } else if (judgeState === 'fail') {
+    finalEl.textContent = '불합격';
+    finalEl.className = 'val';
+  } else {
+    finalEl.textContent = '합격';
+    finalEl.className = 'val pass';
+  }
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  if (tab === 'input') {
+    document.getElementById('tab-input').classList.add('active');
+    // 결과 화면이 열려있으면 검색화면으로
+    const resultScreen = document.getElementById('screen-result');
+    if (resultScreen.classList.contains('active')) {
+      resultScreen.classList.remove('active');
+      document.getElementById('screen-search').classList.add('active');
+      resetSearchForm();
+    }
+
+  } else {
+    // 나머지 탭은 현재 데모에서 미구현
+    showToast('준비 중인 기능입니다');
+  }
+}
+
+function saveResult() {
+  const finalEl = document.getElementById('r-final-result');
+  const resultText = finalEl.textContent;
+  const memo = document.getElementById('r-memo').value.trim();
+
+  const btn = document.getElementById('btn-save');
+  btn.disabled = true;
+  btn.textContent = '저장 중...';
+
+  setTimeout(() => {
+    btn.textContent = '저장 완료';
+    showToast(`케어번호 ${currentCase.careNo} · 1차 결과 "${resultText}" 저장됨${memo ? ' (메모 포함)' : ''}`);
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = '검수 결과 최종 저장';
+    }, 1600);
+  }, 600);
+}
+
+</script>
+</body>
+</html>
